@@ -1,0 +1,83 @@
+# ----------------------
+# GENERAL & OS
+# ----------------------
+.DS_Store
+Thumbs.db
+*.log
+tmp/
+coverage/
+
+# ----------------------
+# ENVIRONMENT VARIABLES (IMPORTANT)
+# ----------------------
+# Chặn tất cả file .env để không lộ API Key
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# ----------------------
+# IDE & EDITOR
+# ----------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ----------------------
+# PYTHON (Backend & AI)
+# ----------------------
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.pytest_cache/
+*.egg-info/
+htmlcov/
+site-packages/
+
+# ----------------------
+# NODE.JS (Next.js & React Native)
+# ----------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Next.js build output
+.next/
+out/
+build/
+dist/
+
+# ----------------------
+# MOBILE - REACT NATIVE
+# ----------------------
+# Android
+android/app/build/
+android/app/src/main/assets/index.android.bundle
+android/app/src/main/assets/index.android.bundle.map
+android/app/src/main/res/drawable-mdpi/
+android/app/src/main/res/drawable-hdpi/
+android/app/src/main/res/drawable-xhdpi/
+android/app/src/main/res/drawable-xxhdpi/
+android/app/src/main/res/drawable-xxxhdpi/
+
+# iOS
+ios/Pods/
+ios/build/
+ios/*.xcworkspace
+ios/DerivedData/
+
+# Metro bundler
+.metro-health-check
+
+# ----------------------
+# DOCKER
+# ----------------------
+docker-compose.override.yml
