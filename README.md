@@ -35,20 +35,7 @@
 - Project Structure
 
 # Project Structure
-## Bash
-```
-S2O-Platform/
-├── apps/
-│   ├── web/                # Next.js for Admin, Restaurant Portal, and Guest View
-│   └── mobile/             # React Native App for End-users
-├── services/
-│   ├── api/                # Main Backend API (Python)
-│   ├── ai-engine/          # AI Service (Chatbot & Recommender - Python)
-│   └── worker/             # Background tasks (Celery/Dramatiq)
-├── docker/                 # Docker configurations
-├── docs/                   # Documentation & UML Diagrams
-└── README.md
-```
+
 
 # Getting Started
 ## Prerequisites
