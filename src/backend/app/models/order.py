@@ -1,64 +1,55 @@
-from sqlalchemy import Column, String, ForeignKey, Integer, DateTime, Numeric, Text, Date
+import uuid
+from sqlalchemy import Column, String, Integer, Text, DECIMAL, ForeignKey, DateTime, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base_class import Base
 
 class Order(Base):
-    __tablename__ = "Order"
-
-    orderID = Column(String(50), primary_key=True)
-    tenantID = Column(String(50), ForeignKey("Tenant.tenantID"), nullable=False)
-    restaurantID = Column(String(50), ForeignKey("Restaurant.restaurantID"), nullable=False)
-    customerID = Column(String(50), ForeignKey("Customer.customerID"))
-    tableID = Column(String(50), ForeignKey("Table.tableID"))
+    order_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = Column(String(50), ForeignKey('tenants.tenant_id'), nullable=False)
+    restaurant_id = Column(String(50), ForeignKey('restaurants.restaurant_id'), nullable=False)
+    customer_id = Column(String(50), ForeignKey('customers.customer_id'))
+    table_id = Column(String(50), ForeignKey('restaurant_tables.table_id'))
     status = Column(String(50), nullable=False)
-    totalAmount = Column(Numeric(19, 4), default=0)
-    createdAt = Column(DateTime, default=func.now())
+    total_amount = Column(DECIMAL(19, 4), default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     restaurant = relationship("Restaurant", back_populates="orders")
     customer = relationship("Customer", back_populates="orders")
-    table = relationship("Table", back_populates="orders")
+    table = relationship("RestaurantTable", back_populates="orders")
     order_details = relationship("OrderDetail", back_populates="order")
-    invoice = relationship("Invoice", back_populates="order", uselist=False)
+    invoice = relationship("Invoice", uselist=False, back_populates="order")
 
 class OrderDetail(Base):
-    __tablename__ = "OrderDetail"
-
-    orderDetailID = Column(String(50), primary_key=True)
-    tenantID = Column(String(50), ForeignKey("Tenant.tenantID"), nullable=False)
-    restaurantID = Column(String(50), ForeignKey("Restaurant.restaurantID"), nullable=False)
-    orderID = Column(String(50), ForeignKey("Order.orderID"), nullable=False)
-    itemID = Column(String(50), ForeignKey("MenuItem.itemID"), nullable=False)
+    order_detail_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = Column(String(50), ForeignKey('tenants.tenant_id'), nullable=False)
+    restaurant_id = Column(String(50), ForeignKey('restaurants.restaurant_id'), nullable=False)
+    order_id = Column(String(50), ForeignKey('orders.order_id'), nullable=False)
+    item_id = Column(String(50), ForeignKey('menu_items.item_id'), nullable=False)
     quantity = Column(Integer, nullable=False)
-    unitPrice = Column(Numeric(19, 4), nullable=False)
+    unit_price = Column(DECIMAL(19, 4), nullable=False)
     note = Column(Text)
 
     order = relationship("Order", back_populates="order_details")
-    item = relationship("MenuItem") 
-class Invoice(Base):
-    __tablename__ = "Invoice"
+    item = relationship("MenuItem", back_populates="order_details")
 
-    invoiceID = Column(String(50), primary_key=True)
-    tenantID = Column(String(50), ForeignKey("Tenant.tenantID"), nullable=False)
-    restaurantID = Column(String(50), ForeignKey("Restaurant.restaurantID"), nullable=False)
-    customerID = Column(String(50), ForeignKey("Customer.customerID"))
-    orderID = Column(String(50), ForeignKey("Order.orderID"), nullable=False)
-    paymentMethod = Column(String(50))
-    amountPaid = Column(Numeric(19, 4), nullable=False)
-    paymentTime = Column(DateTime, default=func.now())
+class Invoice(Base):
+    invoice_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = Column(String(50), ForeignKey('tenants.tenant_id'), nullable=False)
+    restaurant_id = Column(String(50), ForeignKey('restaurants.restaurant_id'), nullable=False)
+    customer_id = Column(String(50), ForeignKey('customers.customer_id'))
+    order_id = Column(String(50), ForeignKey('orders.order_id'), nullable=False)
+    payment_method = Column(String(50))
+    amount_paid = Column(DECIMAL(19, 4), nullable=False)
+    payment_time = Column(DateTime(timezone=True), server_default=func.now())
 
     order = relationship("Order", back_populates="invoice")
-    revenue_report = relationship("Revenue", back_populates="invoice", uselist=False)
 
 class Revenue(Base):
-    __tablename__ = "Revenue"
-
-    revenueID = Column(String(50), primary_key=True)
-    tenantID = Column(String(50), ForeignKey("Tenant.tenantID"), nullable=False)
-    restaurantID = Column(String(50), ForeignKey("Restaurant.restaurantID"), nullable=False)
-    invoiceID = Column(String(50), ForeignKey("Invoice.invoiceID"), nullable=False)
-    reportDate = Column(Date, nullable=False)
-    totalRevenue = Column(Numeric(19, 4), nullable=False)
-    lastUpdate = Column(DateTime, default=func.now(), onupdate=func.now())
-
-    invoice = relationship("Invoice", back_populates="revenue_report")
+    revenue_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = Column(String(50), ForeignKey('tenants.tenant_id'), nullable=False)
+    restaurant_id = Column(String(50), ForeignKey('restaurants.restaurant_id'), nullable=False)
+    invoice_id = Column(String(50), ForeignKey('invoices.invoice_id'), nullable=False)
+    report_date = Column(Date, nullable=False)
+    total_revenue = Column(DECIMAL(19, 4), nullable=False)
+    last_update = Column(DateTime(timezone=True), server_default=func.now())

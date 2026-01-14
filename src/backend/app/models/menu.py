@@ -1,28 +1,28 @@
-from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, Text, Numeric
+import uuid
+from sqlalchemy import Column, String, Integer, Boolean, Text, DECIMAL, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 class Category(Base):
-    __tablename__ = "Category"
+    __tablename__ = "categories"
 
-    categoryID = Column(String(50), primary_key=True)
-    restaurantID = Column(String(50), ForeignKey("Restaurant.restaurantID"), nullable=False)
+    category_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
+    restaurant_id = Column(String(50), ForeignKey('restaurants.restaurant_id'), nullable=False)
     name = Column(String(100), nullable=False)
-    displayIndex = Column(Integer, default=0)
+    display_index = Column(Integer, default=0)
 
     restaurant = relationship("Restaurant", back_populates="categories")
     menu_items = relationship("MenuItem", back_populates="category")
 
 class MenuItem(Base):
-    __tablename__ = "MenuItem"
-
-    itemID = Column(String(50), primary_key=True)
-    categoryID = Column(String(50), ForeignKey("Category.categoryID"), nullable=False)
+    item_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
+    category_id = Column(String(50), ForeignKey('categories.category_id'), nullable=False)
     name = Column(String(255), nullable=False)
     description = Column(Text)
-    price = Column(Numeric(19, 4), nullable=False) 
-    imageURL = Column(Text)
-    isAvailable = Column(Boolean, default=True)
-    aiTags = Column(Text)
+    price = Column(DECIMAL(19, 4), nullable=False)
+    image_url = Column(Text)
+    is_available = Column(Boolean, default=True)
+    ai_tags = Column(Text)
 
     category = relationship("Category", back_populates="menu_items")
+    order_details = relationship("OrderDetail", back_populates="item")
