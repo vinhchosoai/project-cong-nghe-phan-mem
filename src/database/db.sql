@@ -1,155 +1,147 @@
-CREATE TABLE "User" (
-    userID VARCHAR(50) NOT NULL,
-    userName VARCHAR(100) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    phoneNumber VARCHAR(20),
-    password VARCHAR(255) NOT NULL,
-    PRIMARY KEY (userID)
+CREATE TABLE users (
+    user_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone_number VARCHAR(20),
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Tenant (
-    tenantID VARCHAR(50) NOT NULL,
-    userID VARCHAR(50) NOT NULL,
-    PRIMARY KEY (tenantID),
-    FOREIGN KEY (userID) REFERENCES "User"(userID)
+CREATE TABLE tenants (
+    tenant_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-CREATE TABLE Restaurant (
-    restaurantID VARCHAR(50) NOT NULL,
-    tenantID VARCHAR(50) NOT NULL,
+CREATE TABLE restaurants (
+    restaurant_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    tenant_id VARCHAR(50) NOT NULL,
     name VARCHAR(255) NOT NULL,
     address VARCHAR(255),
     status BOOLEAN DEFAULT TRUE,
-    PRIMARY KEY (restaurantID),
-    FOREIGN KEY (tenantID) REFERENCES Tenant(tenantID)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
 );
 
-CREATE TABLE Staff (
-    staffID VARCHAR(50) NOT NULL,
-    restaurantID VARCHAR(50) NOT NULL,
-    userID VARCHAR(50) NOT NULL,
+CREATE TABLE staff (
+    staff_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    restaurant_id VARCHAR(50) NOT NULL,
+    user_id VARCHAR(50) NOT NULL,
     role VARCHAR(50) NOT NULL,
-    PRIMARY KEY (staffID),
-    FOREIGN KEY (restaurantID) REFERENCES Restaurant(restaurantID),
-    FOREIGN KEY (userID) REFERENCES "User"(userID)
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-CREATE TABLE Category (
-    categoryID VARCHAR(50) NOT NULL,
-    restaurantID VARCHAR(50) NOT NULL,
+CREATE TABLE categories (
+    category_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    restaurant_id VARCHAR(50) NOT NULL,
     name VARCHAR(100) NOT NULL,
-    displayIndex INT DEFAULT 0,
-    PRIMARY KEY (categoryID),
-    FOREIGN KEY (restaurantID) REFERENCES Restaurant(restaurantID)
+    display_index INT DEFAULT 0,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id)
 );
 
-CREATE TABLE MenuItem (
-    itemID VARCHAR(50) NOT NULL,
-    categoryID VARCHAR(50) NOT NULL,
+CREATE TABLE menu_items (
+    item_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    category_id VARCHAR(50) NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     price DECIMAL(19, 4) NOT NULL,
-    imageURL TEXT,
-    isAvailable BOOLEAN DEFAULT TRUE,
-    aiTags TEXT,
-    PRIMARY KEY (itemID),
-    FOREIGN KEY (categoryID) REFERENCES Category(categoryID)
+    image_url TEXT,
+    is_available BOOLEAN DEFAULT TRUE,
+    ai_tags TEXT,
+    FOREIGN KEY (category_id) REFERENCES categories(category_id)
 );
 
-CREATE TABLE "Table" (
-    tableID VARCHAR(50) NOT NULL,
-    restaurantID VARCHAR(50) NOT NULL,
-    tableNumber INT NOT NULL,
-    qrCodeString TEXT,
+CREATE TABLE restaurant_tables (
+    table_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    restaurant_id VARCHAR(50) NOT NULL,
+    table_number INT NOT NULL,
+    qr_code_string TEXT,
     status BOOLEAN DEFAULT TRUE,
-    PRIMARY KEY (tableID),
-    FOREIGN KEY (restaurantID) REFERENCES Restaurant(restaurantID)
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id)
 );
 
-CREATE TABLE Customer (
-    customerID VARCHAR(50) NOT NULL,
-    userID VARCHAR(50) NOT NULL,
-    membershipTier VARCHAR(50),
-    currentPoints INT DEFAULT 0,
-    password VARCHAR(255),
-    PRIMARY KEY (customerID),
-    FOREIGN KEY (userID) REFERENCES "User"(userID)
+CREATE TABLE customers (
+    customer_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    membership_tier VARCHAR(50),
+    current_points INT DEFAULT 0,
+    password_hash VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-CREATE TABLE Reservation (
-    reservationID VARCHAR(50) NOT NULL,
-    tenantID VARCHAR(50) NOT NULL,
-    restaurantID VARCHAR(50) NOT NULL,
-    tableID VARCHAR(50),
-    customerID VARCHAR(50),
-    bookingTime DATETIME NOT NULL,
-    guestCount INT NOT NULL,
+CREATE TABLE reservations (
+    reservation_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    tenant_id VARCHAR(50) NOT NULL,
+    restaurant_id VARCHAR(50) NOT NULL,
+    table_id VARCHAR(50),
+    customer_id VARCHAR(50),
+    booking_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    guest_count INT NOT NULL,
     status VARCHAR(50) NOT NULL,
-    PRIMARY KEY (reservationID),
-    FOREIGN KEY (tenantID) REFERENCES Tenant(tenantID),
-    FOREIGN KEY (restaurantID) REFERENCES Restaurant(restaurantID),
-    FOREIGN KEY (tableID) REFERENCES "Table"(tableID),
-    FOREIGN KEY (customerID) REFERENCES Customer(customerID)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id),
+    FOREIGN KEY (table_id) REFERENCES restaurant_tables(table_id),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
 );
 
-CREATE TABLE "Order" (
-    orderID VARCHAR(50) NOT NULL,
-    tenantID VARCHAR(50) NOT NULL,
-    restaurantID VARCHAR(50) NOT NULL,
-    customerID VARCHAR(50),
-    tableID VARCHAR(50),
+CREATE TABLE orders (
+    order_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    tenant_id VARCHAR(50) NOT NULL,
+    restaurant_id VARCHAR(50) NOT NULL,
+    customer_id VARCHAR(50),
+    table_id VARCHAR(50),
     status VARCHAR(50) NOT NULL,
-    totalAmount DECIMAL(19, 4) DEFAULT 0,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (orderID),
-    FOREIGN KEY (tenantID) REFERENCES Tenant(tenantID),
-    FOREIGN KEY (restaurantID) REFERENCES Restaurant(restaurantID),
-    FOREIGN KEY (customerID) REFERENCES Customer(customerID),
-    FOREIGN KEY (tableID) REFERENCES "Table"(tableID)
+    total_amount DECIMAL(19, 4) DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
+    FOREIGN KEY (table_id) REFERENCES restaurant_tables(table_id)
 );
 
-CREATE TABLE OrderDetail (
-    orderDetailID VARCHAR(50) NOT NULL,
-    tenantID VARCHAR(50) NOT NULL,
-    restaurantID VARCHAR(50) NOT NULL,
-    orderID VARCHAR(50) NOT NULL,
-    itemID VARCHAR(50) NOT NULL,
+CREATE TABLE order_details (
+    order_detail_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    tenant_id VARCHAR(50) NOT NULL,
+    restaurant_id VARCHAR(50) NOT NULL,
+    order_id VARCHAR(50) NOT NULL,
+    item_id VARCHAR(50) NOT NULL,
     quantity INT NOT NULL,
-    unitPrice DECIMAL(19, 4) NOT NULL,
+    unit_price DECIMAL(19, 4) NOT NULL,
     note TEXT,
-    PRIMARY KEY (orderDetailID),
-    FOREIGN KEY (tenantID) REFERENCES Tenant(tenantID),
-    FOREIGN KEY (restaurantID) REFERENCES Restaurant(restaurantID),
-    FOREIGN KEY (orderID) REFERENCES "Order"(orderID),
-    FOREIGN KEY (itemID) REFERENCES MenuItem(itemID)
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    FOREIGN KEY (item_id) REFERENCES menu_items(item_id)
 );
 
-CREATE TABLE Invoice (
-    invoiceID VARCHAR(50) NOT NULL,
-    tenantID VARCHAR(50) NOT NULL,
-    restaurantID VARCHAR(50) NOT NULL,
-    customerID VARCHAR(50),
-    orderID VARCHAR(50) NOT NULL,
-    paymentMethod VARCHAR(50),
-    amountPaid DECIMAL(19, 4) NOT NULL,
-    paymentTime DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (invoiceID),
-    FOREIGN KEY (tenantID) REFERENCES Tenant(tenantID),
-    FOREIGN KEY (restaurantID) REFERENCES Restaurant(restaurantID),
-    FOREIGN KEY (customerID) REFERENCES Customer(customerID),
-    FOREIGN KEY (orderID) REFERENCES "Order"(orderID)
+CREATE TABLE invoices (
+    invoice_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    tenant_id VARCHAR(50) NOT NULL,
+    restaurant_id VARCHAR(50) NOT NULL,
+    customer_id VARCHAR(50),
+    order_id VARCHAR(50) NOT NULL,
+    payment_method VARCHAR(50),
+    amount_paid DECIMAL(19, 4) NOT NULL,
+    payment_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
 );
 
-CREATE TABLE Revenue (
-    revenueID VARCHAR(50) NOT NULL,
-    tenantID VARCHAR(50) NOT NULL,
-    restaurantID VARCHAR(50) NOT NULL,
-    invoiceID VARCHAR(50) NOT NULL,
-    reportDate DATE NOT NULL,
-    totalRevenue DECIMAL(19, 4) NOT NULL,
-    lastUpdate DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (revenueID),
-    FOREIGN KEY (tenantID) REFERENCES Tenant(tenantID),
-    FOREIGN KEY (restaurantID) REFERENCES Restaurant(restaurantID),
-    FOREIGN KEY (invoiceID) REFERENCES Invoice(invoiceID)
+CREATE TABLE revenues (
+    revenue_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    tenant_id VARCHAR(50) NOT NULL,
+    restaurant_id VARCHAR(50) NOT NULL,
+    invoice_id VARCHAR(50) NOT NULL,
+    report_date DATE NOT NULL,
+    total_revenue DECIMAL(19, 4) NOT NULL,
+    last_update TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id),
+    FOREIGN KEY (invoice_id) REFERENCES invoices(invoice_id)
 );
