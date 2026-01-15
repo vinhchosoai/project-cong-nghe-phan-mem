@@ -1,28 +1,39 @@
 import uuid
-from sqlalchemy import Column, String, Integer, Boolean, Text, DECIMAL, ForeignKey
+from sqlalchemy import Column, String, Boolean, Float, ForeignKey, Integer, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from app.db.base_class import Base
+from app.db.base_class import Base, TimestampMixin
 
-class Category(Base):
-    __tablename__ = "categories"
+class Category(Base, TimestampMixin):
+    __tablename__ = "categories" # Override auto-name để xử lý số nhiều nếu cần, nhưng class Base của bạn đã xử lý tốt.
 
-    category_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
-    restaurant_id = Column(String(50), ForeignKey('restaurants.restaurant_id'), nullable=False)
-    name = Column(String(100), nullable=False)
-    display_index = Column(Integer, default=0)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    restaurant_id = Column(UUID(as_uuid=True), ForeignKey("restaurants.id"), nullable=False)
+    
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    display_order = Column(Integer, default=0)
 
     restaurant = relationship("Restaurant", back_populates="categories")
-    menu_items = relationship("MenuItem", back_populates="category")
+    items = relationship("MenuItem", back_populates="category", cascade="all, delete-orphan")
 
-class MenuItem(Base):
-    item_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
-    category_id = Column(String(50), ForeignKey('categories.category_id'), nullable=False)
-    name = Column(String(255), nullable=False)
-    description = Column(Text)
-    price = Column(DECIMAL(19, 4), nullable=False)
-    image_url = Column(Text)
+class MenuItem(Base, TimestampMixin):
+    __tablename__ = "menu_items"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    restaurant_id = Column(UUID(as_uuid=True), ForeignKey("restaurants.id"), nullable=False)
+    category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=False)
+    
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    price = Column(Float, nullable=False)
+    image_url = Column(String, nullable=True)
+    
     is_available = Column(Boolean, default=True)
-    ai_tags = Column(Text)
+    is_vegetarian = Column(Boolean, default=False)
+    is_spicy = Column(Boolean, default=False)
+    rating = Column(Float, default=0.0)
 
-    category = relationship("Category", back_populates="menu_items")
-    order_details = relationship("OrderDetail", back_populates="item")
+    restaurant = relationship("Restaurant", back_populates="menu_items")
+    category = relationship("Category", back_populates="items")
+    order_items = relationship("OrderItem", back_populates="menu_item")

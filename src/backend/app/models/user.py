@@ -1,48 +1,24 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, Enum as SQLEnum
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from app.db.base_class import Base
+from app.db.base_class import Base, TimestampMixin
+from app.schemas.enums import UserRole, MembershipTier
 
-class User(Base):
-    user_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
-    username = Column(String(100), nullable=False)
-    email = Column(String(255), nullable=False, unique=True)
-    phone_number = Column(String(20))
-    password_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    tenants = relationship("Tenant", back_populates="owner")
-    staff_roles = relationship("Staff", back_populates="user")
-    customers = relationship("Customer", back_populates="user")
-
-class Tenant(Base):
-    tenant_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(50), ForeignKey('users.user_id'), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    owner = relationship("User", back_populates="tenants")
-    restaurants = relationship("Restaurant", back_populates="tenant")
-
-class Customer(Base):
-    customer_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(50), ForeignKey('users.user_id'), nullable=False)
-    membership_tier = Column(String(50))
-    current_points = Column(String(50), default="0")
-    password_hash = Column(String(255))
-
-    user = relationship("User", back_populates="customers")
-    orders = relationship("Order", back_populates="customer")
-    reservations = relationship("Reservation", back_populates="customer")
-
-class Staff(Base):
-    __tablename__ = "staff" 
+class User(Base, TimestampMixin):
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    full_name = Column(String, nullable=True)
+    phone_number = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
     
-    staff_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
-    restaurant_id = Column(String(50), ForeignKey('restaurants.restaurant_id'), nullable=False)
-    user_id = Column(String(50), ForeignKey('users.user_id'), nullable=False)
-    role = Column(String(50), nullable=False)
-    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+    role = Column(SQLEnum(UserRole), default=UserRole.CUSTOMER, nullable=False)
+    membership_tier = Column(SQLEnum(MembershipTier), default=MembershipTier.IRON, nullable=False)
+    points = Column(Integer, default=0)
+
+    restaurant_id = Column(UUID(as_uuid=True), ForeignKey("restaurants.id"), nullable=True)
 
     restaurant = relationship("Restaurant", back_populates="staff_members")
-    user = relationship("User", back_populates="staff_roles")   
+    orders = relationship("Order", back_populates="user")
