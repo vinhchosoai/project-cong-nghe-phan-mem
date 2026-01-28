@@ -14,3 +14,7 @@ httpx
 redis
 qdrant-client
 openai
+pytest
+pytest-asyncio
+pytest-mock
+google-generativeai

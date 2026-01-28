@@ -2,7 +2,9 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy import Column
 from app.db.base_class import Base
+from uuid import UUID
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -15,8 +17,18 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
         return db.query(self.model).filter(self.model.id == id).first()
 
-    def get_multi(self, db: Session, skip: int = 0, limit: int = 100) -> List[ModelType]:
-        return db.query(self.model).offset(skip).limit(limit).all()
+    def get_multi(
+        self,
+        db: Session,
+        skip: int = 0,
+        limit: int = 100,
+        **filters: Any
+    ) -> List[ModelType]:
+        query = db.query(self.model)
+        for key, value in filters.items():
+            if hasattr(self.model, key) and value is not None:
+                query = query.filter(getattr(self.model, key) == value)
+        return query.offset(skip).limit(limit).all()
 
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)
@@ -47,6 +59,52 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db.commit()
         db.refresh(db_obj)
         return db_obj
+
+    def delete(self, db: Session, *, id: Any) -> ModelType:
+        obj = db.query(self.model).get(id)
+        if obj:
+            db.delete(obj)
+            db.commit()
+        return obj
+
+
+class CRUDTenantBase(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
+    """
+    CRUD base class with tenant isolation
+    Assumes model has restaurant_id or similar tenant field
+    """
+    
+    def __init__(self, model: Type[ModelType], tenant_field: str = "restaurant_id"):
+        super().__init__(model)
+        self.tenant_field = tenant_field
+
+    def get_by_tenant(
+        self,
+        db: Session,
+        tenant_id: UUID,
+        id: Any
+    ) -> Optional[ModelType]:
+        return db.query(self.model).filter(
+            self.model.id == id,
+            getattr(self.model, self.tenant_field) == tenant_id
+        ).first()
+
+    def get_multi_by_tenant(
+        self,
+        db: Session,
+        tenant_id: UUID,
+        skip: int = 0,
+        limit: int = 100,
+        **filters: Any
+    ) -> List[ModelType]:
+        query = db.query(self.model).filter(
+            getattr(self.model, self.tenant_field) == tenant_id
+        )
+        for key, value in filters.items():
+            if hasattr(self.model, key) and value is not None:
+                query = query.filter(getattr(self.model, key) == value)
+        return query.offset(skip).limit(limit).all()
+
 
     def remove(self, db: Session, *, id: Any) -> ModelType:
         obj = db.query(self.model).get(id)

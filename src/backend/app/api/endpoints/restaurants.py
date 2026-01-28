@@ -1,9 +1,9 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app import crud, schemas
+from app.crud.crud_restaurant import restaurant as restaurant_crud
 from app.schemas import restaurant as schemas
-# from app.api import deps
+from app.api.deps import get_current_user
 from app.db.session import get_db
 
 router = APIRouter()
@@ -14,7 +14,7 @@ def read_restaurants(
     skip: int = 0,
     limit: int = 100,
 ) -> Any:
-    restaurants = crud.restaurant.get_multi(db, skip=skip, limit=limit)
+    restaurants = restaurant_crud.get_multi(db, skip=skip, limit=limit)
     return restaurants
 
 @router.post("/", response_model=schemas.RestaurantResponse)
@@ -23,7 +23,7 @@ def create_restaurant(
     db: Session = Depends(get_db),
     restaurant_in: schemas.RestaurantCreate,
 ) -> Any:
-    restaurant = crud.restaurant.create(db=db, obj_in=restaurant_in)
+    restaurant = restaurant_crud.create(db=db, obj_in=restaurant_in)
     return restaurant
 
 @router.get("/{restaurant_id}", response_model=schemas.RestaurantResponse)
@@ -32,7 +32,7 @@ def read_restaurant(
     db: Session = Depends(get_db),
     restaurant_id: str,
 ) -> Any:
-    restaurant = crud.restaurant.get(db=db, id=restaurant_id)
+    restaurant = restaurant_crud.get(db=db, id=restaurant_id)
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
     return restaurant
@@ -47,10 +47,10 @@ def update_restaurant(
     """
     Update a restaurant.
     """
-    restaurant = crud.restaurant.get(db=db, id=restaurant_id)
+    restaurant = restaurant_crud.get(db=db, id=restaurant_id)
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    restaurant = crud.restaurant.update(db=db, db_obj=restaurant, obj_in=restaurant_in)
+    restaurant = restaurant_crud.update(db=db, db_obj=restaurant, obj_in=restaurant_in)
     return restaurant
 
 @router.delete("/{restaurant_id}", response_model=schemas.RestaurantResponse)
@@ -62,8 +62,8 @@ def delete_restaurant(
     """
     Delete a restaurant.
     """
-    restaurant = crud.restaurant.get(db=db, id=restaurant_id)
+    restaurant = restaurant_crud.get(db=db, id=restaurant_id)
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    restaurant = crud.restaurant.remove(db=db, id=restaurant_id)
+    restaurant = restaurant_crud.remove(db=db, id=restaurant_id)
     return restaurant
