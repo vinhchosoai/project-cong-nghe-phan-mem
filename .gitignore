@@ -60,7 +60,6 @@ build/
 *.log
 *.pot
 
-# Environment files - DO NOT PUSH TO GITHUB
 .env
 .env.local
 .env.*.local
@@ -71,3 +70,5 @@ src/backend/.env
 src/backend/.env.local
 src/frontend_web/.env
 src/frontend_web/.env.local
+
+tutorial/
