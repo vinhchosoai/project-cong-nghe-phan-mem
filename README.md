@@ -121,50 +121,7 @@ The system uses the following main entities:
 
 ## Security
 
-- JWT-based authentication (to be implemented)
+- JWT-based authentication 
 - Tenant isolation middleware
 - CORS configuration
-- Role-based access control (to be implemented)
-
-## Testing
-
-Run tests:
-```bash
-pytest
-```
-
-Run with coverage:
-```bash
-pytest --cov=app
-```
-
-## Database Migrations
-
-Create migration:
-```bash
-alembic revision --autogenerate -m "description"
-```
-
-Apply migrations:
-```bash
-alembic upgrade head
-```
-
-## Performance Considerations
-
-- Async/await for non-blocking operations
-- Connection pooling (max 20 connections)
-- Redis caching layer
-- Vector database for fast similarity search
-
-## Contributing
-
-1. Follow the Repository Pattern
-2. Use async/await for all I/O operations
-3. Add tenant_id filtering to all queries
-4. Write tests for new features
-5. No comments in production code
-
-## License
-
-Proprietary - S2O Project
+- Role-based access control
