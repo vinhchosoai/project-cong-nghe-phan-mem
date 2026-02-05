@@ -2,10 +2,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..repositories.user import UserRepository
 from ..models.models import User
 from ..core.exceptions import NotFoundException, ConflictException
+from ..core.config import settings
 import uuid
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
+from datetime import datetime, timedelta
+import jwt
 
 
 class UserService:
@@ -13,10 +14,16 @@ class UserService:
         self.repository = UserRepository(session)
 
     def hash_password(self, password: str) -> str:
-        return pwd_context.hash(password)
+        # Truncate password to 72 bytes for bcrypt compatibility
+        truncated_password = password.encode('utf-8')[:72]
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(truncated_password, salt)
+        return hashed.decode('utf-8')
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        return pwd_context.verify(plain_password, hashed_password)
+        # Truncate password to 72 bytes for bcrypt compatibility
+        truncated_password = plain_password.encode('utf-8')[:72]
+        return bcrypt.checkpw(truncated_password, hashed_password.encode('utf-8'))
 
     async def create_user(self, username: str, email: str, phone_number: str | None, password: str) -> User:
         existing_user = await self.repository.get_by_username(username)
@@ -104,3 +111,18 @@ class UserService:
         if not user or not self.verify_password(password, user.password_hash):
             raise NotFoundException("Invalid username or password")
         return user
+
+    def get_access_token(self, user_id: str) -> str:
+        """Generate JWT access token"""
+        expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
+        payload = {
+            "sub": user_id,
+            "exp": expire,
+            "iat": datetime.utcnow()
+        }
+        encoded_jwt = jwt.encode(
+            payload,
+            settings.secret_key,
+            algorithm=settings.algorithm
+        )
+        return encoded_jwt

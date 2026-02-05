@@ -19,7 +19,8 @@ class BaseRepository(Generic[T]):
         return tenant_id
 
     async def create(self, obj_in: dict) -> T:
-        obj_in['tenant_id'] = self._get_tenant_id()
+        if hasattr(self.model, 'tenant_id'):
+            obj_in['tenant_id'] = self._get_tenant_id()
         db_obj = self.model(**obj_in)
         self.db.add(db_obj)
         await self.db.commit()

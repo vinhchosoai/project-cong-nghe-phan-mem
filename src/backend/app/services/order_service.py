@@ -19,8 +19,12 @@ class OrderService:
             raise NotFoundException("Order not found")
         return order
 
-    async def get_restaurant_orders(self, restaurant_id: str, skip: int = 0, limit: int = 100):
-        orders = await self.order_repo.get_by_restaurant(restaurant_id, skip, limit)
+    async def get_restaurant_orders(self, restaurant_id: str, skip: int = 0, limit: int = 100, status: Optional[str] = None):
+        status_list = None
+        if status:
+            status_list = [s.strip() for s in status.split(',')]
+            
+        orders = await self.order_repo.get_by_restaurant(restaurant_id, skip, limit, status_list)
         return orders
 
     async def get_customer_orders(self, customer_id: str, skip: int = 0, limit: int = 100):

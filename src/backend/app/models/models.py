@@ -14,6 +14,7 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     phone_number = Column(String(20), nullable=True)
     password_hash = Column(String(255), nullable=False)
+    role = Column(String(50), default="customer", nullable=False)  # admin, restaurant_owner, customer
     created_at = Column(DateTime, default=datetime.utcnow)
 
     tenants = relationship("Tenant", back_populates="user")
@@ -218,3 +219,18 @@ class Revenue(Base):
     tenant = relationship("Tenant", back_populates="revenues")
     restaurant = relationship("Restaurant", back_populates="revenues")
     invoice = relationship("Invoice", back_populates="revenues")
+
+
+class Ingredient(Base):
+    __tablename__ = "ingredients"
+
+    ingredient_id = Column(String(50), primary_key=True)
+    restaurant_id = Column(String(50), ForeignKey("restaurants.restaurant_id"), nullable=False)
+    name = Column(String(255), nullable=False)
+    quantity = Column(Numeric(19, 4), default=0)
+    unit = Column(String(50), nullable=False)
+    is_available = Column(Boolean, default=True)
+    
+    restaurant = relationship("Restaurant", back_populates="ingredients")
+
+Restaurant.ingredients = relationship("Ingredient", back_populates="restaurant")

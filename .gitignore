@@ -72,3 +72,4 @@ src/frontend_web/.env
 src/frontend_web/.env.local
 
 tutorial/
+docs/

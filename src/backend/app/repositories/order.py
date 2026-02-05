@@ -19,12 +19,17 @@ class OrderRepository(BaseRepository[Order]):
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_by_restaurant(self, restaurant_id: str, skip: int = 0, limit: int = 100) -> List[Order]:
+    async def get_by_restaurant(self, restaurant_id: str, skip: int = 0, limit: int = 100, status_list: Optional[List[str]] = None) -> List[Order]:
         tenant_id = self._get_tenant_id()
         query = select(Order).where(
             Order.restaurant_id == restaurant_id,
             Order.tenant_id == tenant_id
-        ).offset(skip).limit(limit)
+        )
+        
+        if status_list:
+            query = query.where(Order.status.in_(status_list))
+            
+        query = query.offset(skip).limit(limit).order_by(Order.created_at.desc())
         result = await self.db.execute(query)
         return result.scalars().all()
 

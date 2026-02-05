@@ -55,9 +55,15 @@ async def get_order(order_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/restaurant/{restaurant_id}", response_model=List[OrderResponse])
-async def get_restaurant_orders(restaurant_id: str, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+async def get_restaurant_orders(
+    restaurant_id: str, 
+    skip: int = 0, 
+    limit: int = 100, 
+    status: str = None,
+    db: AsyncSession = Depends(get_db)
+):
     service = OrderService(db)
-    orders = await service.get_restaurant_orders(restaurant_id, skip, limit)
+    orders = await service.get_restaurant_orders(restaurant_id, skip, limit, status)
     return orders
 
 
