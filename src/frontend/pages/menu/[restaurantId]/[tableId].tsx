@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
-
-// Interfaces
 interface MenuItem {
     item_id: string;
     category_id: string;
@@ -12,23 +10,19 @@ interface MenuItem {
     image_url?: string;
     is_available: boolean;
 }
-
 interface Category {
     category_id: string;
     name: string;
     display_index: number;
 }
-
 interface CartItem {
     item: MenuItem;
     quantity: number;
     note?: string;
 }
-
 export default function PublicMenu() {
     const router = useRouter();
     const { restaurantId, tableId } = router.query;
-
     const [categories, setCategories] = useState<Category[]>([]);
     const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
@@ -37,25 +31,18 @@ export default function PublicMenu() {
     const [submitting, setSubmitting] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [customerInfo, setCustomerInfo] = useState<any>(null);
-
-    // Base URL for public API - adjust if checking local/prod environment
-    const API_URL = 'http://localhost:8000/api/v1/public';
-
+    const API_URL = 'http:
     useEffect(() => {
         if (restaurantId) {
             fetchMenu();
         }
         fetchCustomerInfo();
     }, [restaurantId]);
-
     const fetchCustomerInfo = async () => {
         const token = localStorage.getItem('access_token');
         if (token) {
             try {
-                // We use axios directly here or need an instance with interceptor? 
-                // Public menu might not have axiosInstance setup for auth unless shared.
-                // Assuming simple fetch with header for now.
-                const res = await axios.get('http://localhost:8000/api/v1/auth/me', {
+                const res = await axios.get('http:
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setCustomerInfo(res.data);
@@ -64,17 +51,14 @@ export default function PublicMenu() {
             }
         }
     };
-
     const fetchMenu = async () => {
         try {
             const [catRes, itemRes] = await Promise.all([
                 axios.get(`${API_URL}/menu/${restaurantId}`),
                 axios.get(`${API_URL}/menu/${restaurantId}/items`)
             ]);
-
             setCategories(catRes.data);
             setMenuItems(itemRes.data);
-
             if (catRes.data.length > 0) {
                 setActiveCategory(catRes.data[0].category_id);
             }
@@ -84,7 +68,6 @@ export default function PublicMenu() {
             setLoading(false);
         }
     };
-
     const addToCart = (item: MenuItem) => {
         setCart(prev => {
             const existing = prev.find(i => i.item.item_id === item.item_id);
@@ -98,11 +81,9 @@ export default function PublicMenu() {
             return [...prev, { item, quantity: 1 }];
         });
     };
-
     const removeFromCart = (itemId: string) => {
         setCart(prev => prev.filter(i => i.item.item_id !== itemId));
     };
-
     const updateQuantity = (itemId: string, delta: number) => {
         setCart(prev => {
             return prev.map(i => {
@@ -114,11 +95,9 @@ export default function PublicMenu() {
             });
         });
     };
-
     const submitOrder = async () => {
         if (cart.length === 0) return;
         setSubmitting(true);
-
         try {
             const orderData = {
                 restaurant_id: restaurantId,
@@ -129,7 +108,6 @@ export default function PublicMenu() {
                     note: i.note
                 }))
             };
-
             await axios.post(`${API_URL}/orders`, orderData);
             setOrderSuccess(true);
             setCart([]);
@@ -140,9 +118,7 @@ export default function PublicMenu() {
             setSubmitting(false);
         }
     };
-
     if (loading) return <div className="p-8 text-center">Loading menu...</div>;
-
     if (orderSuccess) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-green-50 p-4">
@@ -160,20 +136,17 @@ export default function PublicMenu() {
             </div>
         );
     }
-
-    // Calculate Total
     const total = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0);
-
     return (
         <div className="min-h-screen bg-gray-50 pb-24">
-            {/* Header */}
+            {}
             <div className="bg-white shadow-sm sticky top-0 z-10">
                 <div className="p-4 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                         <h1 className="font-bold text-lg">Menu</h1>
                         <span className="text-sm bg-gray-100 px-2 py-1 rounded">Table {tableId ? tableId.slice(0, 4) : ''}</span>
                     </div>
-                    {/* Customer Profile Section */}
+                    {}
                     {customerInfo && (
                         <div className="flex justify-between items-center bg-indigo-50 px-3 py-2 rounded-lg">
                             <span className="text-sm font-medium text-indigo-900">
@@ -185,8 +158,7 @@ export default function PublicMenu() {
                         </div>
                     )}
                 </div>
-
-                {/* Category Tabs */}
+                {}
                 <div className="flex overflow-x-auto p-2 gap-2 hide-scrollbar">
                     {categories.map(cat => (
                         <button
@@ -202,14 +174,13 @@ export default function PublicMenu() {
                     ))}
                 </div>
             </div>
-
-            {/* Menu Items */}
+            {}
             <div className="p-4 space-y-4">
                 {menuItems
                     .filter(item => item.category_id === activeCategory)
                     .map(item => (
                         <div key={item.item_id} className="bg-white p-4 rounded-xl shadow-sm flex gap-4">
-                            {/* Use placeholder if no image */}
+                            {}
                             <div className="w-24 h-24 bg-gray-200 rounded-lg flex-shrink-0 bg-cover bg-center"
                                 style={{ backgroundImage: item.image_url ? `url(${item.image_url})` : 'none' }}>
                             </div>
@@ -231,8 +202,7 @@ export default function PublicMenu() {
                         </div>
                     ))}
             </div>
-
-            {/* Cart Float */}
+            {}
             {cart.length > 0 && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 border-t z-20">
                     <div className="max-w-md mx-auto">
@@ -242,9 +212,7 @@ export default function PublicMenu() {
                                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total)}
                             </span>
                         </div>
-
-                        {/* Collapsible details could go here */}
-
+                        {}
                         <button
                             onClick={submitOrder}
                             disabled={submitting}

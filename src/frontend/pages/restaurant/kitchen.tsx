@@ -1,50 +1,35 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import axiosInstance from '../../lib/axios';
-
 interface OrderDetail {
     order_detail_id: string;
     item_id: string;
     quantity: number;
     note?: string;
-    // TODO: Expand OrderDetailResponse in backend to include item name or fetch separately?
-    // Ideally backend response includes item_name.
-    // Current schema doesn't show it (only IDs). 
-    // We'll need to fetch menu items to map names or update backend.
-    // Let's assume for now we might just see IDs or we fetch menu to map.
 }
-
 interface Order {
     order_id: string;
     restaurant_id: string;
     table_id: string;
+    table_number?: number;
     status: string;
     total_amount: number;
     created_at: string;
     order_details: OrderDetail[];
 }
-
-// Helper to map IDs to names - in a real app would be better from backend
 interface MenuItem {
     item_id: string;
     name: string;
 }
-
 export default function KitchenView() {
     const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [menuItems, setMenuItems] = useState<Record<string, string>>({});
-
-    // Need to get restaurant ID. 
-    // Owner has one restaurant usually. We can fetch it first.
     const [restaurantId, setRestaurantId] = useState<string>('');
-
     useEffect(() => {
         const init = async () => {
             try {
-                // 1. Get Restaurant ID associated with this owner
-                // We can use a new endpoint or list restaurants (filtered by tenant)
                 const restRes = await axiosInstance.get('/restaurants');
                 if (restRes.data.length > 0) {
                     const restId = restRes.data[0].restaurant_id;
@@ -56,24 +41,17 @@ export default function KitchenView() {
                 }
             } catch (error) {
                 console.error('Failed to init kitchen view:', error);
-                // Redirect to login if 401?
             } finally {
                 setLoading(false);
             }
         };
         init();
-
-        // Polling every 10 seconds
         const interval = setInterval(() => {
             if (restaurantId) fetchOrders(restaurantId);
         }, 10000);
-
         return () => clearInterval(interval);
     }, [restaurantId]);
-
     const fetchMenuNames = async (restId: string) => {
-        // Get all categories -> items to build a map
-        // Efficient way: GET /public/menu/{id}/items (it's public but works)
         try {
             const res = await axiosInstance.get(`/public/menu/${restId}/items`);
             const map: Record<string, string> = {};
@@ -85,23 +63,14 @@ export default function KitchenView() {
             console.error("Failed to fetch menu items map", e);
         }
     };
-
     const fetchOrders = async (restId: string) => {
         try {
             const response = await axiosInstance.get(`/orders/restaurant/${restId}?status=PENDING,PREPARING`);
-            // Also maybe 'preparing'?
-            // Let's get all and filter locally or just pending for now 
-            // Actually owner probably wants to see Preparing too.
-            // API supports filtering by status.
-            // Let's get "pending" first.
-
-            // For now just Pending orders to start cooking
             setOrders(response.data);
         } catch (error) {
             console.error('Failed to fetch orders:', error);
         }
     };
-
     const updateStatus = async (orderId: string, status: string) => {
         try {
             await axiosInstance.patch(`/orders/${orderId}`, { status });
@@ -110,69 +79,82 @@ export default function KitchenView() {
             console.error('Failed to update status:', error);
         }
     };
-
-    if (loading) return <div className="p-8">Loading kitchen view...</div>;
-
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user_role');
+        localStorage.removeItem('tenant_id');
+        localStorage.removeItem('guest_orders');
+        router.push('/login');
+    };
+    if (loading) return <div style={{ padding: '20px' }}>Loading...</div>;
     return (
-        <div className="min-h-screen bg-gray-100 p-6">
-            <h1 className="text-3xl font-bold mb-6 text-gray-800">Kitchen Display System (KDS)</h1>
-
-            {orders.length === 0 ? (
-                <div className="bg-white p-8 rounded shadow text-center text-gray-500">
-                    No pending orders.
+        <div style={{ minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
+            <div style={{ backgroundColor: '#fff', padding: '20px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', marginBottom: '20px' }}>
+                <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h1 style={{ margin: 0, color: '#333', fontSize: '24px' }}>Kitchen Display System</h1>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={() => router.push('/restaurant')} style={{ padding: '10px 20px', backgroundColor: '#6c757d', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer', fontSize: '14px' }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#5a6268'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6c757d'}>Back</button>
+                        <button onClick={handleLogout} style={{ padding: '10px 20px', backgroundColor: '#dc3545', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer', fontSize: '14px' }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#c82333'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc3545'}>Logout</button>
+                    </div>
                 </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {orders.map(order => (
-                        <div key={order.order_id} className="bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-indigo-500">
-                            <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-                                <div>
-                                    <span className="font-bold text-lg">Table: {order.table_id.slice(0, 8)}...</span>
-                                    <div className="text-xs text-gray-500">
-                                        {new Date(order.created_at).toLocaleTimeString()}
+            </div>
+            <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 20px 30px' }}>
+                {orders.length === 0 ? (
+                    <div style={{ backgroundColor: '#fff', padding: '40px', textAlign: 'center', borderRadius: '8px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', color: '#999' }}>
+                        No pending orders.
+                    </div>
+                ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                        {orders.map((order, index) => (
+                            <div key={order.order_id} style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', overflow: 'hidden', borderTop: '4px solid #007bff' }}>
+                                <div style={{ padding: '15px 20px', backgroundColor: '#f9f9f9', borderBottom: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <div style={{ fontWeight: 'bold', fontSize: '16px' }}>Table {order.table_number || 'N/A'}</div>
+                                        <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#007bff' }}>Order #{orders.length - index}</div>
+                                        <div style={{ fontSize: '12px', color: '#666', marginTop: '3px' }}>
+                                            {new Date(order.created_at).toLocaleTimeString()}
+                                        </div>
                                     </div>
+                                    <span style={{ padding: '4px 12px', backgroundColor: '#ffc107', color: '#000', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                                        {order.status.toUpperCase()}
+                                    </span>
                                 </div>
-                                <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-bold">
-                                    {order.status.toUpperCase()}
-                                </span>
-                            </div>
-
-                            <div className="p-4 space-y-3">
-                                {order.order_details.map(detail => (
-                                    <div key={detail.order_detail_id} className="flex justify-between items-start border-b pb-2 last:border-0">
-                                        <div>
-                                            <div className="font-bold text-gray-800">
-                                                {menuItems[detail.item_id] || 'Unknown Item'}
+                                <div style={{ padding: '15px 20px' }}>
+                                    {order.order_details.map(detail => (
+                                        <div key={detail.order_detail_id} style={{ padding: '10px 0', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: 'bold', color: '#333' }}>
+                                                    {menuItems[detail.item_id] || 'Unknown Item'}
+                                                </div>
+                                                {detail.note && (
+                                                    <div style={{ fontSize: '12px', color: '#dc3545', marginTop: '3px', fontStyle: 'italic' }}>Note: {detail.note}</div>
+                                                )}
                                             </div>
-                                            {detail.note && (
-                                                <div className="text-sm text-red-500 italic">Note: {detail.note}</div>
-                                            )}
+                                            <div style={{ fontWeight: 'bold', fontSize: '18px', backgroundColor: '#f0f2f5', padding: '5px 12px', borderRadius: '4px', minWidth: '40px', textAlign: 'center' }}>
+                                                {detail.quantity}
+                                            </div>
                                         </div>
-                                        <div className="font-bold text-xl bg-gray-100 w-8 h-8 flex items-center justify-center rounded">
-                                            {detail.quantity}
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
+                                <div style={{ padding: '15px 20px', backgroundColor: '#f9f9f9', borderTop: '1px solid #ccc', display: 'flex', gap: '10px' }}>
+                                    <button onClick={() => {
+                                        updateStatus(order.order_id, "COMPLETED");
+                                        setOrders(prev => prev.filter(o => o.order_id !== order.order_id));
+                                    }} style={{ flex: 1, padding: '10px', backgroundColor: '#28a745', border: 'none', borderRadius: '4px', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#218838'}
+                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#28a745'}>
+                                        Complete
+                                    </button>
+                                </div>
                             </div>
-
-                            <div className="p-4 bg-gray-50 border-t flex gap-2">
-                                <button
-                                    onClick={() => updateStatus(order.order_id, "PREPARING")}
-                                    className="flex-1 bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700"
-                                >
-                                    Start Cooking
-                                </button>
-                                <button
-                                    onClick={() => updateStatus(order.order_id, "COMPLETED")}
-                                    className="flex-1 bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700"
-                                >
-                                    Complete
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

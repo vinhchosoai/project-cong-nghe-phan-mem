@@ -4,10 +4,7 @@ from ..db.session import get_db
 from ..services.user_service import UserService
 from ..schemas.schemas import UserCreate, UserUpdate, UserResponse, UserListResponse, UserLogin
 from ..core.exceptions import ConflictException, NotFoundException
-
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
-
-
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(user_data: UserCreate, session: AsyncSession = Depends(get_db)):
     service = UserService(session)
@@ -21,8 +18,6 @@ async def create_user(user_data: UserCreate, session: AsyncSession = Depends(get
         return user
     except ConflictException as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
-
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: str, session: AsyncSession = Depends(get_db)):
     service = UserService(session)
@@ -31,8 +26,6 @@ async def get_user(user_id: str, session: AsyncSession = Depends(get_db)):
         return user
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-
 @router.get("", response_model=UserListResponse)
 async def list_users(skip: int = 0, limit: int = 10, session: AsyncSession = Depends(get_db)):
     service = UserService(session)
@@ -43,8 +36,6 @@ async def list_users(skip: int = 0, limit: int = 10, session: AsyncSession = Dep
         "skip": skip,
         "limit": limit
     }
-
-
 @router.get("/search/{search_term}", response_model=UserListResponse)
 async def search_users(search_term: str, skip: int = 0, limit: int = 10, session: AsyncSession = Depends(get_db)):
     service = UserService(session)
@@ -55,8 +46,6 @@ async def search_users(search_term: str, skip: int = 0, limit: int = 10, session
         "skip": skip,
         "limit": limit
     }
-
-
 @router.patch("/{user_id}", response_model=UserResponse)
 async def update_user(user_id: str, user_data: UserUpdate, session: AsyncSession = Depends(get_db)):
     service = UserService(session)
@@ -72,8 +61,6 @@ async def update_user(user_id: str, user_data: UserUpdate, session: AsyncSession
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ConflictException as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
-
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(user_id: str, session: AsyncSession = Depends(get_db)):
     service = UserService(session)
@@ -82,8 +69,6 @@ async def delete_user(user_id: str, session: AsyncSession = Depends(get_db)):
         return None
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-
 @router.post("/login", response_model=UserResponse)
 async def login(credentials: UserLogin, session: AsyncSession = Depends(get_db)):
     service = UserService(session)

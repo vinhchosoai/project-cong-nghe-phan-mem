@@ -1,22 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import axiosInstance from '../../lib/axios';
-
 interface Order {
   id: string;
   restaurant: string;
   items: string;
   total: number;
   date: string;
-  status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
+  status: 'PENDING' | 'PREPARING' | 'COMPLETED' | 'CANCELLED';
+  order_details?: any[];
 }
-
 export default function CustomerOrders() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
-
   useEffect(() => {
     const fetchUserAndOrders = async () => {
       try {
@@ -25,145 +23,132 @@ export default function CustomerOrders() {
           router.push('/login');
           return;
         }
-
         const userResponse = await axiosInstance.get('/auth/me');
-
-        // Check if user is customer
         if (userResponse.data.role !== 'customer') {
           router.push('/');
           return;
         }
-
         setUser(userResponse.data);
-        // TODO: Fetch orders from API
-        setOrders([]);
+        const ordersResponse = await axiosInstance.get('/orders/my-orders');
+        const mappedOrders = ordersResponse.data.map((o: any) => ({
+          id: o.order_id,
+          restaurant: `Restaurant #${o.restaurant_id.slice(-4)}`,
+          items: o.order_details.map((d: any) => `${d.item_name} x ${d.quantity}`).join(', '),
+          total: Number(o.total_amount),
+          date: new Date(o.created_at).toLocaleString(),
+          status: o.status,
+          order_details: o.order_details
+        }));
+        setOrders(mappedOrders);
         setLoading(false);
       } catch (error) {
-        console.error('Failed to fetch user:', error);
+        console.error('Failed to fetch data:', error);
         router.push('/login');
       }
     };
-
     fetchUserAndOrders();
   }, [router]);
-
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user_role');
+    localStorage.removeItem('tenant_id');
+    localStorage.removeItem('guest_orders');
     router.push('/login');
   };
-
-  const getStatusBadge = (status: Order['status']) => {
-    const statusConfig = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
-      preparing: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Preparing' },
-      ready: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Ready' },
-      completed: { bg: 'bg-green-100', text: 'text-green-800', label: 'Completed' },
-      cancelled: { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelled' },
+  const getStatusColor = (status: Order['status']) => {
+    const colors = {
+      PENDING: '#ffc107',
+      PREPARING: '#007bff',
+      READY: '#6f42c1',
+      COMPLETED: '#28a745',
+      CANCELLED: '#dc3545',
     };
-    const config = statusConfig[status];
-    return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
-    );
+    return colors[status] || '#6c757d';
   };
-
+  const getStatusLabel = (status: Order['status']) => {
+    return status;
+  };
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>;
   }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Lịch sử đơn hàng</h1>
-          <div className="flex gap-4 items-center">
-            <span className="text-gray-700">Xin chào, {user?.username}</span>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-            >
-              Đăng xuất
-            </button>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
+      {}
+      <div style={{ backgroundColor: '#fff', padding: '20px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', marginBottom: '20px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1 style={{ margin: 0, color: '#333', fontSize: '24px' }}>Order History</h1>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <span style={{ color: '#666' }}>Hello, {user?.username}</span>
+            <button onClick={() => router.push('/customer/profile')} style={{ padding: '10px 20px', backgroundColor: '#6c757d', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer', fontSize: '14px' }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#5a6268'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6c757d'}>Profile</button>
+            <button onClick={handleLogout} style={{ padding: '10px 20px', backgroundColor: '#dc3545', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer', fontSize: '14px' }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#c82333'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc3545'}>Logout</button>
           </div>
         </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        {/* Profile Section */}
+      </div>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px 30px' }}>
+        {}
         {user && (
-          <div className="bg-white rounded-xl shadow-md p-6 mb-8 border-l-4 border-indigo-500">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Thông tin cá nhân</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', padding: '20px', marginBottom: '20px', borderLeft: '4px solid #007bff' }}>
+            <h2 style={{ margin: '0 0 15px 0', fontSize: '18px', fontWeight: 'bold', color: '#333' }}>Personal Information</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
               <div>
-                <p className="text-sm text-gray-500">Tên người dùng</p>
-                <p className="font-semibold text-gray-900">{user.username}</p>
+                <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666' }}>Username</p>
+                <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#333' }}>{user.username}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Email</p>
-                <p className="font-semibold text-gray-900">{user.email}</p>
+                <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666' }}>Email</p>
+                <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#333' }}>{user.email}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Số điện thoại</p>
-                <p className="font-semibold text-gray-900">{user.phone_number || '-'}</p>
+                <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666' }}>Phone</p>
+                <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#333' }}>{user.phone_number || '-'}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Điểm tích lũy</p>
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-lg text-yellow-600">{user.current_points ?? 0}</span>
-                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Points</span>
+                <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666' }}>Loyalty Points</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffc107' }}>{user.current_points ?? 0}</span>
+                  <span style={{ fontSize: '11px', backgroundColor: '#fff3cd', color: '#856404', padding: '2px 8px', borderRadius: '12px' }}>Points</span>
                 </div>
               </div>
             </div>
           </div>
         )}
-
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Lịch sử đơn hàng</h2>
-
-        <div className="mb-6 flex gap-4 overflow-x-auto pb-2">
-          {['all', 'pending', 'preparing', 'completed', 'cancelled'].map(status => (
-            <button key={status} className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 capitalize whitespace-nowrap">
-              {status}
-            </button>
-          ))}
-        </div>
-
-        <div className="space-y-4">
+        <h2 style={{ margin: '0 0 20px 0', fontSize: '22px', fontWeight: 'bold', color: '#333' }}>Order History</h2>
+        {}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           {orders.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-              <p className="text-gray-500">Chưa có đơn hàng nào</p>
+            <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', padding: '40px', textAlign: 'center', color: '#999' }}>
+              No orders found.
             </div>
           ) : (
             orders.map((order) => (
               <div
                 key={order.id}
-                className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow"
+                style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', padding: '20px' }}
               >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4 mb-2">
-                      <h3 className="text-lg font-bold text-gray-900">{order.restaurant}</h3>
-                      {getStatusBadge(order.status)}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px' }}>
+                  <div style={{ flex: 1, minWidth: '250px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                      <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#333' }}>{order.restaurant}</h3>
+                      <span style={{ padding: '4px 12px', backgroundColor: getStatusColor(order.status), color: '#fff', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                        {getStatusLabel(order.status)}
+                      </span>
                     </div>
-                    <p className="text-gray-600 text-sm mb-2">Mã đơn: {order.id}</p>
-                    <p className="text-gray-600">{order.items}</p>
-                    <p className="text-gray-500 text-sm mt-2">Ngày: {order.date}</p>
+                    <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#666' }}>Order ID: {order.id}</p>
+                    <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#333' }}>{order.items}</p>
+                    <p style={{ margin: 0, fontSize: '12px', color: '#999' }}>Date: {order.date}</p>
                   </div>
-
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-indigo-600 mb-4">
-                      {(order.total / 1000).toLocaleString('vi-VN')}K
+                  <div style={{ textAlign: 'right', minWidth: '150px' }}>
+                    <p style={{ margin: '0 0 15px 0', fontSize: '24px', fontWeight: 'bold', color: '#007bff' }}>
+                      {order.total.toLocaleString()} đ
                     </p>
-                    <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
-                      Chi tiết
+                    <button style={{ padding: '8px 20px', backgroundColor: '#007bff', border: 'none', borderRadius: '4px', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
+                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#007bff'}>
+                      Details
                     </button>
                   </div>
                 </div>
@@ -171,7 +156,7 @@ export default function CustomerOrders() {
             ))
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

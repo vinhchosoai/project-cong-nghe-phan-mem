@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import axiosInstance from '../lib/axios';
-
 export default function Register() {
   const router = useRouter();
   const [username, setUsername] = useState('');
@@ -11,38 +10,29 @@ export default function Register() {
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState('');
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-
     if (!username || !email || !password || !confirmPassword) {
       setError('Please fill in all required fields');
       return;
     }
-
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-
     if (password.length < 8) {
       setError('Password must be at least 8 characters');
       return;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError('Please enter a valid email address');
       return;
     }
-
     setLoading(true);
-
     try {
       const response = await axiosInstance.post('/auth/register', {
         username,
@@ -50,7 +40,6 @@ export default function Register() {
         password,
         phone_number: phone || null,
       });
-
       if (response.data) {
         setSuccess('Registration successful! Redirecting to login...');
         setTimeout(() => {
@@ -68,126 +57,168 @@ export default function Register() {
       setLoading(false);
     }
   };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center text-indigo-600 mb-8">
-          Create Account
-        </h1>
-
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Username *
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email *
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Enter your phone (optional)"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password *
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password (min 8 characters)"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <span
-                className="absolute right-3 top-3 cursor-pointer"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? 'Hide' : 'Show'}
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password *
-            </label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your password"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <span
-                className="absolute right-3 top-3 cursor-pointer"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? 'Hide' : 'Show'}
-              </span>
-            </div>
-          </div>
-
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+      backgroundColor: '#f0f2f5',
+      padding: '20px'
+    }}>
+      <div style={{
+        backgroundColor: '#fff',
+        padding: '40px',
+        borderRadius: '8px',
+        boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+        width: '100%',
+        maxWidth: '400px'
+      }}>
+        <h2 style={{ marginBottom: '30px', color: '#333', textAlign: 'center' }}>Register</h2>
+        <form onSubmit={handleRegister}>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Username"
+            required
+            style={{
+              width: '100%',
+              padding: '10px',
+              marginBottom: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            required
+            style={{
+              width: '100%',
+              padding: '10px',
+              marginBottom: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Phone (Optional)"
+            style={{
+              width: '100%',
+              padding: '10px',
+              marginBottom: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password (min 8 characters)"
+            required
+            style={{
+              width: '100%',
+              padding: '10px',
+              marginBottom: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm Password"
+            required
+            style={{
+              width: '100%',
+              padding: '10px',
+              marginBottom: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
+            <div style={{
+              backgroundColor: '#ffebee',
+              border: '1px solid #ef5350',
+              borderRadius: '4px',
+              padding: '10px',
+              marginBottom: '10px'
+            }}>
+              <p style={{ color: '#c62828', fontSize: '14px', margin: 0, textAlign: 'center' }}>{error}</p>
             </div>
           )}
-
           {success && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-              {success}
+            <div style={{
+              backgroundColor: '#e8f5e9',
+              border: '1px solid #66bb6a',
+              borderRadius: '4px',
+              padding: '10px',
+              marginBottom: '10px'
+            }}>
+              <p style={{ color: '#2e7d32', fontSize: '14px', margin: 0, textAlign: 'center' }}>{success}</p>
             </div>
           )}
-
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded"
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: loading ? '#999' : '#007bff',
+              border: 'none',
+              borderRadius: '4px',
+              color: '#fff',
+              fontSize: '16px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => {
+              if (!loading) e.currentTarget.style.backgroundColor = '#0056b3';
+            }}
+            onMouseOut={(e) => {
+              if (!loading) e.currentTarget.style.backgroundColor = '#007bff';
+            }}
           >
             {loading ? 'Creating Account...' : 'Register'}
           </button>
         </form>
-
-        <p className="text-center text-gray-600 mt-6">
-          Already have an account?{' '}
-          <button
-            onClick={() => router.push('/login')}
-            className="text-indigo-600 hover:text-indigo-700 font-bold"
-          >
-            Login here
-          </button>
-        </p>
+        <div style={{
+          textAlign: 'center',
+          marginTop: '20px',
+          paddingTop: '20px',
+          borderTop: '1px solid #e0e0e0'
+        }}>
+          <p style={{ color: '#666', fontSize: '14px', margin: 0 }}>
+            Already have an account?{' '}
+            <button
+              onClick={() => router.push('/login')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#007bff',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontSize: '14px'
+              }}
+            >
+              Login here
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

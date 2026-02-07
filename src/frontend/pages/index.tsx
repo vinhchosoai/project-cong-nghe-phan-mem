@@ -1,39 +1,32 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import axiosInstance from '../lib/axios';
-
 interface UserData {
   user_id: string;
   email: string;
   full_name: string;
   role: string;
 }
-
 interface AuthResponse {
   user_id: string;
   email: string;
   full_name: string;
   tenant_id: string;
 }
-
 export default function Home() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('access_token');
-
       if (!token) {
         router.push('/login');
         return;
       }
-
       try {
         const response = await axiosInstance.get('/auth/me');
-
         const userData = response.data as AuthResponse;
         const userWithRole: UserData = {
           user_id: userData.user_id,
@@ -41,7 +34,6 @@ export default function Home() {
           full_name: userData.full_name,
           role: userData.email.includes('admin') ? 'ADMIN' : 'RESTAURANT_STAFF',
         };
-
         setUser(userWithRole);
         setLoading(false);
       } catch (err) {
@@ -50,46 +42,43 @@ export default function Home() {
         router.push('/login');
       }
     };
-
     checkAuth();
   }, [router]);
-
   const handleLogout = () => {
     localStorage.removeItem('access_token');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('tenant_id');
+    localStorage.removeItem('guest_orders');
     router.push('/login');
   };
-
   const navigateTo = (path: string) => {
     router.push(path);
   };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600 font-medium">Đang tải...</p>
+          <p className="mt-4 text-gray-600 font-medium">Loading...</p>
         </div>
       </div>
     );
   }
-
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Phiên đăng nhập hết hạn</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Session Expired</h1>
           <button
             onClick={() => router.push('/login')}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition"
           >
-            Đăng nhập lại
+            Login Again
           </button>
         </div>
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <header className="bg-white shadow-md sticky top-0 z-50">
@@ -102,34 +91,32 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm text-gray-500">Xin chào</p>
+              <p className="text-sm text-gray-500">Hello</p>
               <p className="font-semibold text-gray-800">{user.full_name}</p>
             </div>
             <button
               onClick={handleLogout}
               className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition"
             >
-              Đăng xuất
+              Logout
             </button>
           </div>
         </div>
       </header>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-gray-800 mb-2">
-            Chào mừng, {user.full_name}!
+            Welcome, {user.full_name}!
           </h2>
           <p className="text-gray-600">
-            Vai trò: <span className="font-semibold text-indigo-600">{user.role}</span>
+            Role: <span className="font-semibold text-indigo-600">{user.role}</span>
           </p>
         </div>
-
         {user.role === 'ADMIN' && (
           <div className="space-y-8">
             <div>
               <h3 className="text-2xl font-bold text-gray-800 mb-6">
-                Bảng điều khiển quản trị
+                Admin Dashboard
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div
@@ -152,13 +139,12 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Quản lý nhà hàng
+                    Restaurant Management
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Xem, tạo, chỉnh sửa và quản lý toàn bộ nhà hàng
+                    View, create, edit and manage all restaurants
                   </p>
                 </div>
-
                 <div
                   onClick={() => navigateTo('/admin/users')}
                   className="bg-white rounded-lg shadow-lg hover:shadow-xl p-6 cursor-pointer transition transform hover:scale-105"
@@ -179,13 +165,12 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Quản lý người dùng
+                    User Management
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Quản lý tài khoản nhân viên và quyền truy cập
+                    Manage staff accounts and permissions
                   </p>
                 </div>
-
                 <div
                   onClick={() => navigateTo('/admin/analytics')}
                   className="bg-white rounded-lg shadow-lg hover:shadow-xl p-6 cursor-pointer transition transform hover:scale-105"
@@ -206,13 +191,12 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Báo cáo & Phân tích
+                    Reports & Analytics
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Xem thống kê doanh thu, đơn hàng và khách hàng
+                    View revenue, orders, and customer statistics
                   </p>
                 </div>
-
                 <div
                   onClick={() => navigateTo('/admin/settings')}
                   className="bg-white rounded-lg shadow-lg hover:shadow-xl p-6 cursor-pointer transition transform hover:scale-105"
@@ -239,13 +223,12 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Cài đặt hệ thống
+                    System Settings
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Cấu hình cài đặt chung và tùy chỉnh hệ thống
+                    Configure general settings and system customization
                   </p>
                 </div>
-
                 <div className="bg-white rounded-lg shadow-lg hover:shadow-xl p-6">
                   <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
                     <svg
@@ -263,44 +246,42 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Hỗ trợ kỹ thuật
+                    Technical Support
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Truy cập log hệ thống và xử lý sự cố
+                    Access system logs and troubleshooting
                   </p>
                 </div>
               </div>
             </div>
-
             <div className="bg-white rounded-lg shadow-lg p-8">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Thống kê tổng quát</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-4">General Statistics</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
-                  <p className="text-gray-600 text-sm font-medium">Tổng nhà hàng</p>
+                  <p className="text-gray-600 text-sm font-medium">Total Restaurants</p>
                   <p className="text-3xl font-bold text-blue-600 mt-2">--</p>
                 </div>
                 <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6">
-                  <p className="text-gray-600 text-sm font-medium">Tổng người dùng</p>
+                  <p className="text-gray-600 text-sm font-medium">Total Users</p>
                   <p className="text-3xl font-bold text-green-600 mt-2">--</p>
                 </div>
                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
-                  <p className="text-gray-600 text-sm font-medium">Đơn hàng hôm nay</p>
+                  <p className="text-gray-600 text-sm font-medium">Orders Today</p>
                   <p className="text-3xl font-bold text-purple-600 mt-2">--</p>
                 </div>
                 <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">
-                  <p className="text-gray-600 text-sm font-medium">Doanh thu hôm nay</p>
+                  <p className="text-gray-600 text-sm font-medium">Revenue Today</p>
                   <p className="text-3xl font-bold text-orange-600 mt-2">--</p>
                 </div>
               </div>
             </div>
           </div>
         )}
-
         {user.role === 'RESTAURANT_STAFF' && (
           <div className="space-y-8">
             <div>
               <h3 className="text-2xl font-bold text-gray-800 mb-6">
-                Bảng điều khiển nhà hàng
+                Restaurant Dashboard
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div
@@ -323,13 +304,12 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Quản lý đơn hàng
+                    Order Management
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Xem và xử lý các đơn hàng đang chờ
+                    View and process pending orders
                   </p>
                 </div>
-
                 <div
                   onClick={() => navigateTo('/restaurant')}
                   className="bg-white rounded-lg shadow-lg hover:shadow-xl p-6 cursor-pointer transition transform hover:scale-105"
@@ -350,13 +330,12 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Quản lý menu
+                    Menu Management
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Cập nhật thực đơn và giá cả
+                    Update menu items and prices
                   </p>
                 </div>
-
                 <div
                   onClick={() => navigateTo('/restaurant')}
                   className="bg-white rounded-lg shadow-lg hover:shadow-xl p-6 cursor-pointer transition transform hover:scale-105"
@@ -383,13 +362,12 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Quản lý bàn
+                    Table Management
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Cập nhật trạng thái bàn và đặt chỗ
+                    Update table status and reservations
                   </p>
                 </div>
-
                 <div
                   onClick={() => navigateTo('/restaurant')}
                   className="bg-white rounded-lg shadow-lg hover:shadow-xl p-6 cursor-pointer transition transform hover:scale-105"
@@ -410,13 +388,12 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Bếp hiển thị
+                    Kitchen Display
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Xem đơn hàng trực tiếp ở bếp
+                    View live orders in the kitchen
                   </p>
                 </div>
-
                 <div
                   onClick={() => navigateTo('/restaurant')}
                   className="bg-white rounded-lg shadow-lg hover:shadow-xl p-6 cursor-pointer transition transform hover:scale-105"
@@ -437,29 +414,27 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Thống kê
+                    Analytics
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Xem doanh số và hiệu suất
+                    View sales and performance
                   </p>
                 </div>
               </div>
             </div>
-
             <div className="bg-white rounded-lg shadow-lg p-8">
-              <h3 className="text-xl font-bold text-gray-800 mb-6">Đơn hàng gần đây</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-6">Recent Orders</h3>
               <div className="bg-gray-50 rounded-lg p-6 text-center text-gray-600">
-                <p>Không có đơn hàng gần đây</p>
+                <p>No recent orders</p>
               </div>
             </div>
           </div>
         )}
-
         {user.role === 'CUSTOMER' && (
           <div className="space-y-8">
             <div>
               <h3 className="text-2xl font-bold text-gray-800 mb-6">
-                Khám phá nhà hàng
+                Explore Restaurants
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div
@@ -482,13 +457,12 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Thực đơn QR
+                    QR Menu
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Quét mã QR để xem thực đơn và đặt hàng
+                    Scan QR to view menu and order
                   </p>
                 </div>
-
                 <div
                   onClick={() => navigateTo('/customer/orders')}
                   className="bg-white rounded-lg shadow-lg hover:shadow-xl p-6 cursor-pointer transition transform hover:scale-105"
@@ -509,13 +483,12 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Đơn hàng của tôi
+                    My Orders
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Xem lịch sử đơn hàng và trạng thái
+                    View order history and status
                   </p>
                 </div>
-
                 <div
                   onClick={() => navigateTo('/customer/profile')}
                   className="bg-white rounded-lg shadow-lg hover:shadow-xl p-6 cursor-pointer transition transform hover:scale-105"
@@ -536,24 +509,23 @@ export default function Home() {
                     </svg>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Hồ sơ cá nhân
+                    Personal Profile
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Quản lý thông tin và điểm thưởng
+                    Manage info and loyalty points
                   </p>
                 </div>
               </div>
             </div>
-
             <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg p-8 text-white">
-              <h3 className="text-2xl font-bold mb-4">Điểm thưởng của bạn</h3>
+              <h3 className="text-2xl font-bold mb-4">Your Loyalty Points</h3>
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-indigo-100 mb-2">Tổng điểm</p>
+                  <p className="text-indigo-100 mb-2">Total Points</p>
                   <p className="text-5xl font-bold">0</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-indigo-100 mb-2">Hạng thành viên</p>
+                  <p className="text-indigo-100 mb-2">Member Tier</p>
                   <p className="text-3xl font-bold">BRONZE</p>
                 </div>
               </div>
