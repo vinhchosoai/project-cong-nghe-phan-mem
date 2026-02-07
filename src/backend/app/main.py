@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.middleware import TenantMiddleware
@@ -15,11 +16,9 @@ from app.api.restaurant import router as restaurant_router
 from app.api.menu import router as menu_router
 from app.api.ai import router as ai_router
 from app.api.admin import router as admin_router
+from app.api.upload import router as upload_router
 import logging
-
 logger = logging.getLogger(__name__)
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
@@ -29,15 +28,12 @@ async def lifespan(app: FastAPI):
     await close_db()
     await broadcaster.disconnect()
     logger.info("Application shutdown complete")
-
-
 app = FastAPI(
     title="S2O - Smart Restaurant Management Platform",
     description="Backend API for restaurant management system",
     version="1.0.0",
     lifespan=lifespan
 )
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -45,9 +41,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.add_middleware(TenantMiddleware)
-
 app.include_router(users_router)
 app.include_router(auth_router)
 app.include_router(admin_router)
@@ -60,21 +54,24 @@ from app.api.public_menu import router as public_menu_router
 app.include_router(public_menu_router)
 from app.api.ingredient import router as ingredient_router
 app.include_router(ingredient_router)
-
-
+from app.api.staff import router as staff_router
+app.include_router(staff_router)
+from app.api.table_request import router as table_request_router
+app.include_router(table_request_router)
+app.include_router(upload_router, prefix="/api/v1")
+from pathlib import Path
+uploads_dir = Path("uploads")
+uploads_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 @app.exception_handler(AppException)
 async def app_exception_handler(request: Request, exc: AppException):
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.message},
     )
-
-
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {"status": "healthy", "environment": settings.environment}
-
-
 @app.get("/", tags=["Root"])
 async def root():
     return {"message": "S2O Restaurant Management API"}

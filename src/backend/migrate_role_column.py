@@ -2,7 +2,6 @@ import asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 from app.core.config import settings
-
 async def migrate():
     engine = create_async_engine(settings.database_url)
     try:
@@ -13,6 +12,5 @@ async def migrate():
         print(f'Error: {e}')
     finally:
         await engine.dispose()
-
 if __name__ == '__main__':
     asyncio.run(migrate())

@@ -8,17 +8,18 @@ from app.models.models import User
 import jwt
 from jwt import PyJWTError
 import logging
-
 logger = logging.getLogger(__name__)
-
+from passlib.context import CryptContext
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer(auto_error=False)
-
-
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+def get_password_hash(password):
+    return pwd_context.hash(password)
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db)
 ) -> User:
-    """Verify JWT token and return current user"""
     if credentials is None:
         logger.warning("Missing authorization credentials")
         raise HTTPException(
@@ -26,10 +27,8 @@ async def get_current_user(
             detail="Missing authorization header",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
     token = credentials.credentials
     logger.debug(f"Verifying token: {token[:20]}...")
-    
     try:
         payload = jwt.decode(
             token,
@@ -50,8 +49,6 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)}"
         )
-    
-    # Get user from database
     user_repo = UserRepository(db)
     user = await user_repo.get(user_id)
     if user is None:
@@ -60,6 +57,26 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found"
         )
-    
     logger.debug(f"User authenticated: {user.username}")
+    return user
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db)
+) -> User | None:
+    if credentials is None:
+        return None
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(
+            token,
+            settings.secret_key,
+            algorithms=[settings.algorithm]
+        )
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+    except PyJWTError:
+        return None
+    user_repo = UserRepository(db)
+    user = await user_repo.get(user_id)
     return user

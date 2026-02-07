@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import axiosInstance from '../../lib/axios';
-
+import DashboardLayout from '../components/Layout/DashboardLayout';
 interface User {
   user_id: string;
   email: string;
   full_name: string;
   role: string;
 }
-
 export default function AdminUsers() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
@@ -19,7 +18,6 @@ export default function AdminUsers() {
     password: '',
     full_name: '',
   });
-
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     if (!token) {
@@ -28,171 +26,209 @@ export default function AdminUsers() {
       setLoading(false);
     }
   }, [router]);
-
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
       await axiosInstance.post('/auth/register', formData);
-
       setFormData({ email: '', password: '', full_name: '' });
       setShowForm(false);
-      alert('Thêm người dùng thành công');
+      alert('User added successfully');
     } catch (error) {
       console.error('Error adding user:', error);
-      alert('Không thể thêm người dùng');
+      alert('Failed to add user');
     }
   };
-
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    router.push('/login');
-  };
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Đang tải...</p>
-        </div>
-      </div>
-    );
+    return <div style={{ textAlign: 'center', padding: '40px' }}>Loading...</div>;
   }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý người dùng</h1>
-          <div className="flex gap-4">
-            <button
-              onClick={() => router.push('/')}
-              className="text-gray-600 hover:text-gray-900 font-medium"
-            >
-              Quay lại
+    <DashboardLayout title="User Management" userRole="Admin">
+      <style jsx>{`
+        .page-header {
+          margin-bottom: 25px;
+        }
+        .btn {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 4px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: background-color 0.3s;
+        }
+        .btn-primary {
+          background-color: #007bff;
+          color: #fff;
+        }
+        .btn-primary:hover {
+          background-color: #0056b3;
+        }
+        .form-card {
+          background-color: #fff;
+          padding: 25px;
+          border-radius: 8px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          margin-bottom: 25px;
+        }
+        .form-card h2 {
+          margin-top: 0;
+          margin-bottom: 20px;
+          color: #333;
+          font-size: 20px;
+        }
+        .form-group {
+          margin-bottom: 15px;
+        }
+        .form-group label {
+          display: block;
+          margin-bottom: 5px;
+          font-size: 14px;
+          color: #495057;
+          font-weight: 500;
+        }
+        .form-group input {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 14px;
+          box-sizing: border-box;
+        }
+        .table-card {
+          background-color: #fff;
+          border-radius: 8px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        table th,
+        table td {
+          padding: 12px;
+          text-align: left;
+          border-bottom: 1px solid #dee2e6;
+        }
+        table th {
+          background-color: #f8f9fa;
+          font-weight: 600;
+          color: #495057;
+          font-size: 12px;
+          text-transform: uppercase;
+        }
+        table td {
+          font-size: 14px;
+          color: #212529;
+        }
+        .role-badge {
+          display: inline-block;
+          padding: 4px 10px;
+          background-color: #e7f3ff;
+          color: #004085;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+        .btn-edit {
+          color: #007bff;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          padding: 0;
+          margin-right: 15px;
+        }
+        .btn-edit:hover {
+          text-decoration: underline;
+        }
+        .btn-delete {
+          color: #dc3545;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          padding: 0;
+        }
+        .btn-delete:hover {
+          text-decoration: underline;
+        }
+      `}</style>
+      <div className="page-header">
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="btn btn-primary"
+        >
+          {showForm ? 'Cancel' : '+ Add New User'}
+        </button>
+      </div>
+      {showForm && (
+        <div className="form-card">
+          <h2>Add New User</h2>
+          <form onSubmit={handleAddUser}>
+            <div className="form-group">
+              <label>Full Name</label>
+              <input
+                type="text"
+                value={formData.full_name}
+                onChange={(e) =>
+                  setFormData({ ...formData, full_name: e.target.value })
+                }
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                required
+              />
+            </div>
+            <button type="submit" className="btn btn-primary">
+              Add User
             </button>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-            >
-              Đăng xuất
-            </button>
-          </div>
+          </form>
         </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg"
-          >
-            {showForm ? 'Hủy' : '+ Thêm người dùng mới'}
-          </button>
-        </div>
-
-        {showForm && (
-          <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Thêm người dùng mới</h2>
-            <form onSubmit={handleAddUser} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tên đầy đủ
-                </label>
-                <input
-                  type="text"
-                  value={formData.full_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, full_name: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mật khẩu
-                </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition"
-              >
-                Thêm người dùng
-              </button>
-            </form>
-          </div>
-        )}
-
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    Tên
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    Vai trò
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    Hành động
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-900">Admin User</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                    admin@example.com
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                      Admin
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button className="text-indigo-600 hover:text-indigo-900 font-medium">
-                      Sửa
-                    </button>
-                    <button className="ml-4 text-red-600 hover:text-red-900 font-medium">
-                      Xóa
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </main>
-    </div>
+      )}
+      <div className="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Admin User</td>
+              <td>admin@example.com</td>
+              <td>
+                <span className="role-badge">Admin</span>
+              </td>
+              <td>
+                <button className="btn-edit">Edit</button>
+                <button className="btn-delete">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </DashboardLayout>
   );
 }

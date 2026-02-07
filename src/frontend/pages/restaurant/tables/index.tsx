@@ -1,36 +1,30 @@
 import { useState, useEffect } from 'react';
-import axiosInstance from '../../../lib/axios';
 import { useRouter } from 'next/router';
-
+import axiosInstance from '../../../lib/axios';
 interface Table {
     table_id: string;
     table_number: number;
     qr_code_string: string;
     status: boolean;
 }
-
 export default function TableManager() {
+    const router = useRouter();
     const [tables, setTables] = useState<Table[]>([]);
     const [loading, setLoading] = useState(true);
     const [restaurantId, setRestaurantId] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [newTableNumber, setNewTableNumber] = useState('');
     const [generating, setGenerating] = useState(false);
-    const router = useRouter();
-
     useEffect(() => {
         fetchTables();
     }, []);
-
     const fetchTables = async () => {
         try {
-            // First get restaurant ID - assuming single restaurant for now or from context
             const restRes = await axiosInstance.get('/restaurants');
             if (restRes.data.length > 0) {
                 const restId = restRes.data[0].restaurant_id;
                 setRestaurantId(restId);
                 const res = await axiosInstance.get(`/restaurants/${restId}/tables`);
-                // Sort by table number
                 setTables(res.data.sort((a: Table, b: Table) => a.table_number - b.table_number));
             }
         } catch (error) {
@@ -39,7 +33,6 @@ export default function TableManager() {
             setLoading(false);
         }
     };
-
     const handleCreateTable = async (e: React.FormEvent) => {
         e.preventDefault();
         setGenerating(true);
@@ -57,9 +50,8 @@ export default function TableManager() {
             setGenerating(false);
         }
     };
-
     const handleDeleteTable = async (id: string) => {
-        if (!confirm("Are you sure? This will invalidate the QR code.")) return;
+        if (!confirm("Delete this table? This will invalidate the QR code.")) return;
         try {
             await axiosInstance.delete(`/tables/${id}`);
             fetchTables();
@@ -67,99 +59,77 @@ export default function TableManager() {
             console.error("Failed to delete table", error);
         }
     };
-
-    // Helper to generate QR Code Image URL (using a public API or local lib if available, 
-    // but for now we can just use a simple QR generator API for display)
-    // Actually, asking backend to generate image is better, but frontend lib `qrcode.react` is standard.
-    // Since I can't install packages easily, I'll use a public API for rendering or simple text display.
-    // Using goqr.me API for simple rendering.
-    const getQrImage = (data: string) => `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(data)}`;
-
-    if (loading) return <div className="p-8">Loading tables...</div>;
-
+    const getQrImage = (data: string) => `https:
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user_role');
+        localStorage.removeItem('tenant_id');
+        router.push('/login');
+    };
+    if (loading) return <div style={{ padding: '20px' }}>Loading...</div>;
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-6xl mx-auto">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800">Table Management</h1>
-                    <button
-                        onClick={() => setShowModal(true)}
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium"
-                    >
-                        + Add Table
-                    </button>
+        <div style={{ minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
+            <div style={{ backgroundColor: '#fff', padding: '20px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', marginBottom: '20px' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h1 style={{ margin: 0, color: '#333', fontSize: '24px' }}>Table Management</h1>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={() => router.push('/restaurant')} style={{ padding: '10px 20px', backgroundColor: '#6c757d', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer', fontSize: '14px' }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#5a6268'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6c757d'}>Back</button>
+                        <button onClick={handleLogout} style={{ padding: '10px 20px', backgroundColor: '#dc3545', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer', fontSize: '14px' }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#c82333'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc3545'}>Logout</button>
+                    </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            </div>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px 30px' }}>
+                <div style={{ marginBottom: '20px', textAlign: 'right' }}>
+                    <button onClick={() => setShowModal(true)} style={{ padding: '10px 20px', backgroundColor: '#007bff', border: 'none', borderRadius: '4px', color: '#fff', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold' }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#007bff'}>+ Add Table</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
                     {tables.map(table => (
-                        <div key={table.table_id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center">
-                            <div className="text-2xl font-bold text-gray-800 mb-4">Table {table.table_number}</div>
-
-                            <div className="bg-gray-100 p-2 rounded-lg mb-4">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={getQrImage(table.qr_code_string)} alt={`QR for Table ${table.table_number}`} className="w-32 h-32" />
+                        <div key={table.table_id} style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#333', marginBottom: '15px' }}>Table {table.table_number}</div>
+                            <div style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '8px', marginBottom: '15px' }}>
+                                {}
+                                <img src={getQrImage(table.qr_code_string)} alt={`QR for Table ${table.table_number}`} style={{ width: '150px', height: '150px' }} />
                             </div>
-
-                            <p className="text-xs text-gray-400 mb-4 text-center break-all">{table.qr_code_string}</p>
-
-                            <div className="mt-auto w-full flex gap-2">
-                                <a
-                                    href={table.qr_code_string}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex-1 bg-blue-50 text-blue-600 text-center py-2 rounded hover:bg-blue-100 text-sm font-medium"
-                                >
+                            <p style={{ fontSize: '11px', color: '#999', marginBottom: '15px', textAlign: 'center', wordBreak: 'break-all', maxWidth: '100%' }}>{table.qr_code_string}</p>
+                            <div style={{ width: '100%', display: 'flex', gap: '10px' }}>
+                                <a href={table.qr_code_string} target="_blank" rel="noreferrer" style={{ flex: 1, backgroundColor: '#007bff', color: '#fff', textAlign: 'center', padding: '8px', borderRadius: '4px', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>
                                     Test Link
                                 </a>
-                                <button
-                                    onClick={() => handleDeleteTable(table.table_id)}
-                                    className="flex-1 bg-red-50 text-red-600 py-2 rounded hover:bg-red-100 text-sm font-medium"
-                                >
+                                <button onClick={() => handleDeleteTable(table.table_id)} style={{ flex: 1, backgroundColor: '#dc3545', color: '#fff', padding: '8px', borderRadius: '4px', border: 'none', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#c82333'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc3545'}>
                                     Delete
                                 </button>
                             </div>
                         </div>
                     ))}
-
                     {tables.length === 0 && (
-                        <div className="col-span-full text-center py-12 text-gray-500">
+                        <div style={{ gridColumn: '1 / -1', backgroundColor: '#fff', padding: '40px', textAlign: 'center', borderRadius: '8px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', color: '#999' }}>
                             No tables found. Create one to get started.
                         </div>
                     )}
                 </div>
             </div>
-
-            {/* Create Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-md">
-                        <h2 className="text-xl font-bold mb-4">Add New Table</h2>
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '30px', width: '100%', maxWidth: '400px' }}>
+                        <h2 style={{ margin: '0 0 20px 0', fontSize: '20px', fontWeight: 'bold' }}>Add New Table</h2>
                         <form onSubmit={handleCreateTable}>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Table Number</label>
-                                <input
-                                    type="number"
-                                    value={newTableNumber}
-                                    onChange={e => setNewTableNumber(e.target.value)}
-                                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                    placeholder="e.g. 1"
-                                    required
-                                    min="1"
-                                />
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold' }}>Table Number</label>
+                                <input type="number" value={newTableNumber} onChange={e => setNewTableNumber(e.target.value)} placeholder="e.g. 1" required min="1" style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }} />
                             </div>
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                                >
+                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '10px 20px', backgroundColor: '#6c757d', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer' }}>
                                     Cancel
                                 </button>
-                                <button
-                                    type="submit"
-                                    disabled={generating}
-                                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-                                >
+                                <button type="submit" disabled={generating} style={{ padding: '10px 20px', backgroundColor: generating ? '#999' : '#007bff', border: 'none', borderRadius: '4px', color: '#fff', cursor: generating ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>
                                     {generating ? 'Creating...' : 'Create Table'}
                                 </button>
                             </div>

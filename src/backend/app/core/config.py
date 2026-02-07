@@ -1,8 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List
 import json
-
-
 class Settings(BaseSettings):
     database_url: str
     redis_url: str
@@ -15,10 +13,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = True
     cors_origins: List[str] = ["http://localhost:3000", "http://localhost:3001", "http://localhost:8081"]
-
     class Config:
         env_file = ".env"
         case_sensitive = False
-
-
 settings = Settings()

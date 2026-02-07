@@ -10,10 +10,7 @@ from app.schemas.order_schemas import (
 from app.services.menu_service import (
     OrderService, InvoiceService, CustomerService, ReservationService
 )
-
 router = APIRouter(prefix="/api/v1", tags=["Orders and Reservations"])
-
-
 @router.post("/orders", response_model=OrderResponse)
 async def create_order(data: OrderCreate, db: AsyncSession = Depends(get_db)):
     try:
@@ -27,8 +24,6 @@ async def create_order(data: OrderCreate, db: AsyncSession = Depends(get_db)):
         return order
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/orders/{order_id}", response_model=OrderResponse)
 async def get_order(order_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -39,8 +34,6 @@ async def get_order(order_id: str, db: AsyncSession = Depends(get_db)):
         return order
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/restaurants/{restaurant_id}/orders", response_model=list[OrderResponse])
 async def list_orders(restaurant_id: str, skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)):
     try:
@@ -49,8 +42,6 @@ async def list_orders(restaurant_id: str, skip: int = 0, limit: int = 50, db: As
         return orders
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/customers/{customer_id}/orders", response_model=list[OrderResponse])
 async def get_customer_orders(customer_id: str, skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)):
     try:
@@ -59,8 +50,6 @@ async def get_customer_orders(customer_id: str, skip: int = 0, limit: int = 50, 
         return orders
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/orders/status/{status}", response_model=list[OrderResponse])
 async def get_orders_by_status(status: str, restaurant_id: str, skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)):
     try:
@@ -69,8 +58,6 @@ async def get_orders_by_status(status: str, restaurant_id: str, skip: int = 0, l
         return orders
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.patch("/orders/{order_id}", response_model=OrderResponse)
 async def update_order(order_id: str, data: OrderUpdate, db: AsyncSession = Depends(get_db)):
     try:
@@ -79,14 +66,11 @@ async def update_order(order_id: str, data: OrderUpdate, db: AsyncSession = Depe
             order = await service.update_order_status(order_id, data.status)
         else:
             order = await service.get_order(order_id)
-        
         if not order:
             raise HTTPException(status_code=404, detail="Order not found")
         return order
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.delete("/orders/{order_id}")
 async def delete_order(order_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -97,8 +81,6 @@ async def delete_order(order_id: str, db: AsyncSession = Depends(get_db)):
         return {"message": "Order deleted"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.post("/invoices", response_model=InvoiceResponse)
 async def create_invoice(data: InvoiceCreate, db: AsyncSession = Depends(get_db)):
     try:
@@ -114,8 +96,6 @@ async def create_invoice(data: InvoiceCreate, db: AsyncSession = Depends(get_db)
         return invoice
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/invoices/{invoice_id}", response_model=InvoiceResponse)
 async def get_invoice(invoice_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -126,8 +106,6 @@ async def get_invoice(invoice_id: str, db: AsyncSession = Depends(get_db)):
         return invoice
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/restaurants/{restaurant_id}/invoices", response_model=list[InvoiceResponse])
 async def list_invoices(restaurant_id: str, skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)):
     try:
@@ -136,8 +114,6 @@ async def list_invoices(restaurant_id: str, skip: int = 0, limit: int = 50, db: 
         return invoices
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.post("/customers", response_model=CustomerResponse)
 async def create_customer(data: CustomerCreate, db: AsyncSession = Depends(get_db)):
     try:
@@ -146,8 +122,6 @@ async def create_customer(data: CustomerCreate, db: AsyncSession = Depends(get_d
         return customer
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/customers/{customer_id}", response_model=CustomerResponse)
 async def get_customer(customer_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -158,8 +132,6 @@ async def get_customer(customer_id: str, db: AsyncSession = Depends(get_db)):
         return customer
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/users/{user_id}/customer", response_model=CustomerResponse)
 async def get_customer_by_user(user_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -170,8 +142,6 @@ async def get_customer_by_user(user_id: str, db: AsyncSession = Depends(get_db))
         return customer
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.patch("/customers/{customer_id}", response_model=CustomerResponse)
 async def update_customer(customer_id: str, data: CustomerUpdate, db: AsyncSession = Depends(get_db)):
     try:
@@ -182,8 +152,6 @@ async def update_customer(customer_id: str, data: CustomerUpdate, db: AsyncSessi
         return customer
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.post("/customers/{customer_id}/loyalty-points")
 async def add_loyalty_points(customer_id: str, points: int, db: AsyncSession = Depends(get_db)):
     try:
@@ -194,8 +162,6 @@ async def add_loyalty_points(customer_id: str, points: int, db: AsyncSession = D
         return {"message": f"Added {points} points", "current_points": customer.current_points}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.post("/reservations", response_model=ReservationResponse)
 async def create_reservation(data: ReservationCreate, db: AsyncSession = Depends(get_db)):
     try:
@@ -210,8 +176,6 @@ async def create_reservation(data: ReservationCreate, db: AsyncSession = Depends
         return reservation
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/reservations/{reservation_id}", response_model=ReservationResponse)
 async def get_reservation(reservation_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -222,8 +186,6 @@ async def get_reservation(reservation_id: str, db: AsyncSession = Depends(get_db
         return reservation
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/restaurants/{restaurant_id}/reservations", response_model=list[ReservationResponse])
 async def list_reservations(restaurant_id: str, skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)):
     try:
@@ -232,8 +194,6 @@ async def list_reservations(restaurant_id: str, skip: int = 0, limit: int = 50, 
         return reservations
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.patch("/reservations/{reservation_id}", response_model=ReservationResponse)
 async def update_reservation(reservation_id: str, data: ReservationUpdate, db: AsyncSession = Depends(get_db)):
     try:
@@ -244,8 +204,6 @@ async def update_reservation(reservation_id: str, data: ReservationUpdate, db: A
         return reservation
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.delete("/reservations/{reservation_id}")
 async def cancel_reservation(reservation_id: str, db: AsyncSession = Depends(get_db)):
     try:

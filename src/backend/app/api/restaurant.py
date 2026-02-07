@@ -10,10 +10,7 @@ from app.schemas.restaurant_schemas import (
 from app.services.restaurant_service import (
     RestaurantService, CategoryService, MenuItemService, RestaurantTableService
 )
-
 router = APIRouter(prefix="/api/v1", tags=["Restaurant Management"])
-
-
 @router.post("/restaurants", response_model=RestaurantResponse)
 async def create_restaurant(data: RestaurantCreate, db: AsyncSession = Depends(get_db)):
     try:
@@ -22,8 +19,6 @@ async def create_restaurant(data: RestaurantCreate, db: AsyncSession = Depends(g
         return restaurant
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/restaurants/{restaurant_id}", response_model=RestaurantResponse)
 async def get_restaurant(restaurant_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -34,8 +29,6 @@ async def get_restaurant(restaurant_id: str, db: AsyncSession = Depends(get_db))
         return restaurant
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/restaurants", response_model=list[RestaurantResponse])
 async def list_restaurants(db: AsyncSession = Depends(get_db)):
     try:
@@ -44,8 +37,6 @@ async def list_restaurants(db: AsyncSession = Depends(get_db)):
         return restaurants
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.patch("/restaurants/{restaurant_id}", response_model=RestaurantResponse)
 async def update_restaurant(restaurant_id: str, data: RestaurantUpdate, db: AsyncSession = Depends(get_db)):
     try:
@@ -56,8 +47,6 @@ async def update_restaurant(restaurant_id: str, data: RestaurantUpdate, db: Asyn
         return restaurant
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.delete("/restaurants/{restaurant_id}")
 async def delete_restaurant(restaurant_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -68,8 +57,6 @@ async def delete_restaurant(restaurant_id: str, db: AsyncSession = Depends(get_d
         return {"message": "Restaurant deleted"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.post("/restaurants/{restaurant_id}/categories", response_model=CategoryResponse)
 async def create_category(restaurant_id: str, data: CategoryCreate, db: AsyncSession = Depends(get_db)):
     try:
@@ -82,8 +69,6 @@ async def create_category(restaurant_id: str, data: CategoryCreate, db: AsyncSes
         return category
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/categories/{category_id}", response_model=CategoryResponse)
 async def get_category(category_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -94,8 +79,6 @@ async def get_category(category_id: str, db: AsyncSession = Depends(get_db)):
         return category
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/restaurants/{restaurant_id}/categories", response_model=list[CategoryResponse])
 async def list_categories(restaurant_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -104,8 +87,6 @@ async def list_categories(restaurant_id: str, db: AsyncSession = Depends(get_db)
         return categories
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.patch("/categories/{category_id}", response_model=CategoryResponse)
 async def update_category(category_id: str, data: CategoryUpdate, db: AsyncSession = Depends(get_db)):
     try:
@@ -116,8 +97,6 @@ async def update_category(category_id: str, data: CategoryUpdate, db: AsyncSessi
         return category
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.delete("/categories/{category_id}")
 async def delete_category(category_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -128,8 +107,6 @@ async def delete_category(category_id: str, db: AsyncSession = Depends(get_db)):
         return {"message": "Category deleted"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.post("/categories/{category_id}/items", response_model=MenuItemResponse)
 async def create_menu_item(category_id: str, data: MenuItemCreate, db: AsyncSession = Depends(get_db)):
     try:
@@ -146,8 +123,6 @@ async def create_menu_item(category_id: str, data: MenuItemCreate, db: AsyncSess
         return menu_item
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/menu-items/{item_id}", response_model=MenuItemResponse)
 async def get_menu_item(item_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -158,8 +133,6 @@ async def get_menu_item(item_id: str, db: AsyncSession = Depends(get_db)):
         return menu_item
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/categories/{category_id}/items", response_model=list[MenuItemResponse])
 async def list_menu_items(category_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -168,8 +141,6 @@ async def list_menu_items(category_id: str, db: AsyncSession = Depends(get_db)):
         return items
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.patch("/menu-items/{item_id}", response_model=MenuItemResponse)
 async def update_menu_item(item_id: str, data: MenuItemUpdate, db: AsyncSession = Depends(get_db)):
     try:
@@ -180,8 +151,6 @@ async def update_menu_item(item_id: str, data: MenuItemUpdate, db: AsyncSession 
         return menu_item
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.delete("/menu-items/{item_id}")
 async def delete_menu_item(item_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -192,8 +161,6 @@ async def delete_menu_item(item_id: str, db: AsyncSession = Depends(get_db)):
         return {"message": "Menu item deleted"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.post("/restaurants/{restaurant_id}/tables", response_model=RestaurantTableResponse)
 async def create_table(restaurant_id: str, data: RestaurantTableCreate, db: AsyncSession = Depends(get_db)):
     try:
@@ -206,8 +173,6 @@ async def create_table(restaurant_id: str, data: RestaurantTableCreate, db: Asyn
         return table
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/tables/{table_id}", response_model=RestaurantTableResponse)
 async def get_table(table_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -218,8 +183,6 @@ async def get_table(table_id: str, db: AsyncSession = Depends(get_db)):
         return table
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/restaurants/{restaurant_id}/tables", response_model=list[RestaurantTableResponse])
 async def list_tables(restaurant_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -228,8 +191,6 @@ async def list_tables(restaurant_id: str, db: AsyncSession = Depends(get_db)):
         return tables
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.patch("/tables/{table_id}", response_model=RestaurantTableResponse)
 async def update_table(table_id: str, data: RestaurantTableUpdate, db: AsyncSession = Depends(get_db)):
     try:
@@ -240,8 +201,6 @@ async def update_table(table_id: str, data: RestaurantTableUpdate, db: AsyncSess
         return table
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.delete("/tables/{table_id}")
 async def delete_table(table_id: str, db: AsyncSession = Depends(get_db)):
     try:
